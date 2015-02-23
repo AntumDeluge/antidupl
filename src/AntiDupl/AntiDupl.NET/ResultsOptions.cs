@@ -70,6 +70,14 @@ namespace AntiDupl.NET
             return (m_viewMode == ViewMode.VerticalPairTable || m_viewMode == ViewMode.HorizontalPairTable);
         }
 
+        public CoreDll.ViewType ViewType()
+        {
+            if (m_viewMode == ViewMode.VerticalPairTable || m_viewMode == ViewMode.HorizontalPairTable)
+                return CoreDll.ViewType.DuplPair;
+            else
+                return CoreDll.ViewType.GroupedThumbnails;
+        }
+
         public delegate void ImageViewChangeHandler();
         public event ImageViewChangeHandler OnImageViewChange;
         private bool m_stretchSmallImages = false;
@@ -124,6 +132,7 @@ namespace AntiDupl.NET
         public int splitterDistanceHorizontalMaximized;
         public int splitterDistanceHorizontalNormal;
 
+        //TODO вынести в опции
         public System.Drawing.Size thumbnailSizeMax = new System.Drawing.Size(DEFAULT_THUMBNAIL_WIDTH_MAX, DEFAULT_THUMBNAIL_HEIGHT_MAX);
 
         public ResultsOptions(ResultsOptions options)

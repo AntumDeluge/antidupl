@@ -93,7 +93,7 @@ namespace AntiDupl.NET
         }
 
         /// <summary>
-        /// Получаем из списка результатов группы и назначаем их скрытому полю m_groups.
+        /// Получаем из хранилища (adImageGroup.cpp) группы и назначаем их скрытому полю m_groups.
         /// </summary>
         private void GetGroups()
         {
@@ -188,7 +188,6 @@ namespace AntiDupl.NET
             // Если хранилище еще не содержит панелей групп
             if (m_thumbnailGroupPanels[index] == null)
             {
-
                 ThumbnailGroupPanel groupPanel = new ThumbnailGroupPanel(m_core, m_options, m_groups[index], this);
                 groupPanel.Location = new Point(
                     Padding.Left + groupPanel.Margin.Left + AutoScrollPosition.X,
@@ -205,7 +204,27 @@ namespace AntiDupl.NET
                 m_thumbnailGroupPanels[index] = groupPanel;
                 Controls.Add(groupPanel);
                 m_changeControls = true;
-                Console.Write("a");
+                Console.WriteLine("Add m_thumbnailGroupPanels[{0}]", index);
+            }
+            //else if (m_thumbnailGroupPanels[index].Location.IsEmpty)
+            // Если хранилище еще не содержит эскиза
+            else if (m_thumbnailGroupPanels[index].ThumbnailPanels[0].Thumbnail == null)
+            {
+                //SuspendLayout();
+                //System.Diagnostics.Debug.Write(m_thumbnailGroupPanels[index].ThumbnailPanels[0].Thumbnail.Width);
+                //Console.WriteLine("m_thumbnailGroupPanels[{0}].ThumbnailPanels[0].Thumbnail.Width = {1}.", index, m_thumbnailGroupPanels[index].ThumbnailPanels[0].Thumbnail.Width);
+                //if (m_thumbnailGroupPanels[index].ThumbnailPanels[0].Thumbnail == null)
+                //    Console.WriteLine("m_thumbnailGroupPanels[{0}].ThumbnailPanels[0].Thumbnail = null", index);
+                for (int i = 0; i < m_thumbnailGroupPanels[index].ThumbnailPanels.Length; i++)
+                {
+                    // Если эскиз есть в хранилише
+                    //if (m_thumbnailStorage.Exists(m_thumbnailGroupPanels[index].ThumbnailPanels[i].ImageInfo))
+                    {
+                        m_thumbnailGroupPanels[index].ThumbnailPanels[i].Thumbnail = m_thumbnailStorage.Get(m_thumbnailGroupPanels[index].ThumbnailPanels[i].ImageInfo);
+                    }
+                    //else // добавляем
+                }
+                //PerformLayout();
             }
         }
 
@@ -216,7 +235,6 @@ namespace AntiDupl.NET
             {
                 if (m_thumbnailGroupPanels[i] == null)
                 {
-
                     ThumbnailGroupPanel groupPanel = new ThumbnailGroupPanel(m_core, m_options, m_groups[i], this);
                     groupPanel.Location = new Point(
                         Padding.Left + groupPanel.Margin.Left + AutoScrollPosition.X,
@@ -231,12 +249,11 @@ namespace AntiDupl.NET
                         }
                     }
 
-                    //groupPanel.Visible = false;
+                   //groupPanel.Visible = false;
 
                     controls.Add(groupPanel);
 
                     m_thumbnailGroupPanels[i] = groupPanel;
-
                 }
             }
 
@@ -264,26 +281,37 @@ namespace AntiDupl.NET
         {
             if (m_thumbnailGroupPanels != null && m_thumbnailGroupPanels.Length > 0 && m_thumbnailGroupPanels[0] != null)
             {
-                int minIndex = GetVisibleGroupIndexMin();
-                int maxIndex = GetVisibleGroupIndexMax();
+                try
+                {
+                    // Группы дубликатов которые в данный момент видны.
+                    int minIndex = GetVisibleGroupIndexMin();
+                    int maxIndex = GetVisibleGroupIndexMax();
 
-                SuspendLayout();
-                //Visible = false;
-                for (int i = 0; i < minIndex; ++i)
-                {
-                    RemoveGroupPanel(i);
+                    SuspendLayout();
+                    //Visible = false;
+                    // Удаляем панели до текущей.
+                    /*for (int i = 0; i < minIndex; ++i)
+                    {
+                        RemoveGroupPanel(i);
+                    }*/
+                    for (int i = minIndex; i < maxIndex; ++i)
+                    {
+                        AddGroupPanel(i);
+                        //Application.DoEvents(); bad
+                    }
+                    //AddGroupPanels(minIndex, maxIndex);
+                    // Удаляем панели после текущей.
+                    /*for (int i = maxIndex; i < m_thumbnailGroupPanels.Length; ++i)
+                    {
+                        RemoveGroupPanel(i);
+                    }*/
+                    PerformLayout();
+                    //Visible = true;
                 }
-                for (int i = minIndex; i < maxIndex; ++i)
+                catch (Exception ex)
                 {
-                    AddGroupPanel(i);
-                    //Application.DoEvents();
+                    MessageBox.Show(ex.StackTrace + Environment.NewLine + ex.Message);
                 }
-                for (int i = maxIndex; i < m_thumbnailGroupPanels.Length; ++i)
-                {
-                    RemoveGroupPanel(i);
-                }
-                PerformLayout();
-                //Visible = true;
             }
         }
 
@@ -299,10 +327,10 @@ namespace AntiDupl.NET
             //    SuspendDrawing(Controls[i]);
 
             m_changeControls = false;
-            DateTime t = DateTime.Now;
+            //DateTime t = DateTime.Now;
             UpdateVisiblePanels();
-            TimeSpan updateTime = DateTime.Now - t;
-            Console.WriteLine("ut = {0}; at = {1}.", updateTime.TotalMilliseconds.ToString(), t.Millisecond);
+            /*TimeSpan updateTime = DateTime.Now - t;
+            Console.WriteLine("updateTime = {0}; timeMS = {1}.", updateTime.TotalMilliseconds.ToString(), t.Millisecond);*/
 
             //for (int i = 0; i < Controls.Count; ++i)
             //{
@@ -429,6 +457,14 @@ namespace AntiDupl.NET
                 OnCurrentThumbnailChanged(group, index);
         }
 
+        public void SelectedResultsChanged()
+        {
+            m_mainSplitContainer.SelectedResultsChanged();
+        }
+
+        /// <summary>
+        /// // Переименовывает файл с заданной группой и индексом в списке результатов.
+        /// </summary>
         public bool Rename(CoreGroup group, int index, string newFileName)
         {
             if(m_core.Rename(group.id, index, newFileName))
@@ -437,6 +473,57 @@ namespace AntiDupl.NET
                 return true;
             }
             return false;
+        }
+
+        public bool Delete(CoreGroup coreGroup, int index)
+        {
+            if (m_core.Delete(coreGroup.id, index))
+            {
+                UpdateGroups();
+                return true;
+            }
+            return false;
+        }
+
+        public int GetSelectedImagesCount()
+        {
+            int selectedImagesCount = 0;
+            /*for (int i = 0; i < Rows.Count; i++)
+            {
+                DataGridViewCustomRow row = (DataGridViewCustomRow)Rows[i];
+                if (row.selected && i >= 0 && i < m_results.Length)
+                {
+                    selectedResultsCount++;
+                }
+            }*/
+            return selectedImagesCount;
+        }
+
+        public void UpdateGroup(int groupId)
+        {
+            if (m_thumbnailGroupPanels[groupId] != null)
+                m_thumbnailGroupPanels[groupId].UpdateGroup();
+        }
+
+        public bool GroupNotNull(int groupId)
+        {
+            return (m_thumbnailGroupPanels[groupId] != null);
+        }
+
+        public void UnselectAll()
+        {
+            for (int i = 0; i < m_groups.Length; ++i)
+            {
+                m_core.SetSelection(m_groups[i].id, 0, CoreDll.SelectionType.UnselectAll);
+            }
+            UpdateAllGroup();
+        }
+
+        public void UpdateAllGroup()
+        {
+            foreach (ThumbnailGroupPanel panel in m_thumbnailGroupPanels)
+                if (panel != null)
+                    panel.UpdateGroup();
         }
     }
 }

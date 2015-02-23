@@ -31,19 +31,52 @@ namespace AntiDupl.NET
     public class CoreGroup
     {
         public int id;
+        public CoreDll.ResultType type;
         public CoreImageInfo[] images;
 
+        /// <summary>
+        /// Размер наибольшей группы на экране.
+        /// </summary>
         public Size sizeMax = new Size(0, 0);
+
+        public uint imageSizeMax; //== black
+        public ulong fileSizeMax;
+        public bool imageTypeDiffrent;
+        public double imageBlocknessMax;
+        public double imageBlurringMax;
+        public bool exifDiffrent;
 
         public CoreGroup(ref CoreDll.adGroup group, CoreLib core)
         {
             id = group.id.ToInt32();
             images = core.GetImageInfo(id, 0, (uint)group.size);
+            type = group.type;
+
+            imageTypeDiffrent = false;
+            exifDiffrent = false;
             for (int i = 0; i < images.Length; ++i)
             {
                 sizeMax.Width = Math.Max(sizeMax.Width, (int)images[i].width);
                 sizeMax.Height = Math.Max(sizeMax.Height, (int)images[i].height);
+                fileSizeMax = Math.Max(fileSizeMax, images[i].size);
+                imageBlocknessMax = Math.Max(imageBlocknessMax, images[i].blockiness);
+                imageBlurringMax = Math.Max(imageBlurringMax, images[i].blurring);
+                if (!imageTypeDiffrent)
+                    for (int j = 0; j < images.Length; ++j)
+                        if (images[i].type != images[j].type)
+                        {
+                            imageTypeDiffrent = true;
+                            break;
+                        }
+                if (!exifDiffrent)
+                    for (int j = 0; j < images.Length; ++j)
+                        if (!CoreDll.ExifEqual(images[i].exifInfo, images[j].exifInfo))
+                        {
+                            exifDiffrent = true;
+                            break;
+                        }
             }
+            imageSizeMax = (uint)(sizeMax.Width * sizeMax.Height);
         }
     }
 }

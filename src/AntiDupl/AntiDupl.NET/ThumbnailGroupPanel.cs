@@ -66,6 +66,9 @@ namespace AntiDupl.NET
                 m_thumbnailPanels[i] = new ThumbnailPanel(m_core, m_options, m_group, i, this);
                 m_thumbnailPanels[i].Location = new Point(Padding.Left + m_thumbnailPanels[i].Margin.Left + (m_thumbnailPanels[i].Width + m_thumbnailPanels[i].Margin.Horizontal)*i,
                     Padding.Top + m_thumbnailPanels[i].Margin.Top);
+                m_thumbnailPanels[i].ContextMenuStrip = new ThumbnailPanelContextMenu(m_core, m_options, m_thumbnailPanels[i], m_thumbnailGroupTable);
+                //m_thumbnailPanels[i].ContextMenuStrip = new ThumbnailPanelContextMenu(m_core, m_options, this, m_thumbnailGroupTable);
+                //m_thumbnailPanels[i].ContextMenuStrip = new ThumbnailPanelContextMenu(m_core, m_options, this, m_thumbnailGroupTable, m_group, i);
 
                 width += m_thumbnailPanels[i].Width + m_thumbnailPanels[i].Padding.Horizontal + Margin.Horizontal;
                 height = Math.Max(height, m_thumbnailPanels[i].Height + m_thumbnailPanels[i].Padding.Vertical + Margin.Vertical);
@@ -73,6 +76,18 @@ namespace AntiDupl.NET
             ClientSize = new Size(width, height);
 
             Controls.AddRange(m_thumbnailPanels);
+        }
+
+        /// <summary>
+        /// Обновление информации группы.
+        /// </summary>
+        public void UpdateGroup()
+        {
+            bool[] selected = m_core.GetSelection(m_group.id, 0, (uint)m_group.images.Length);
+            for (int i = 0; i < m_thumbnailPanels.Length; ++i)
+            {
+                m_thumbnailPanels[i].Selected = selected[i];
+            }
         }
     }
 }

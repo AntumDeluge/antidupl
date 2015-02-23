@@ -120,7 +120,11 @@ namespace AntiDupl.NET
         {
             StringBuilder builder = new StringBuilder();
             builder.Append(m_selectedText);
-            int selectedResultCount = m_mainSplitContainer.resultsListView.GetSelectedResultCount();
+            int selectedResultCount; //= m_mainSplitContainer.resultsListView.GetSelectedResultCount();
+            if (m_options.resultsOptions.IsPairTableView())
+                selectedResultCount = m_mainSplitContainer.resultsListView.GetSelectedResultCount();
+            else
+                selectedResultCount = m_mainSplitContainer.thumbnailGroupTable.GetSelectedImagesCount(); ;
             if (m_mainSplitContainer.resultsListView.GetTotalResultCount() > 0)
                 builder.Append(selectedResultCount);
             else

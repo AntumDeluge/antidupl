@@ -60,11 +60,12 @@ namespace AntiDupl.NET
             m_groupedThumbnailsMenuItem = InitFactory.MenuItem.Create(null, ResultsOptions.ViewMode.GroupedThumbnails, OnClick);
 
             //m_groupedThumbnailsMenuItem.Enabled = false;
+            //m_groupedThumbnailsMenuItem.Enabled = true;
 
             DropDownItems.Add(m_verticalPairTableMenuItem);
             DropDownItems.Add(m_horizontalPairTableMenuItem);
-            //DropDownItems.Add(new ToolStripSeparator());
-            //DropDownItems.Add(m_groupedThumbnailsMenuItem);
+            DropDownItems.Add(new ToolStripSeparator());
+            DropDownItems.Add(m_groupedThumbnailsMenuItem);
         }
 
         private void OnClick(object sender, EventArgs e)

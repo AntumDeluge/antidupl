@@ -447,6 +447,24 @@ DLLAPI adError adCanApply(adHandle handle, adActionEnableType actionEnableType, 
     return AD_OK;
 }
 
+DLLAPI adError adCanApplyView(adHandle handle, adActionEnableType actionEnableType, adViewType viewType, adBoolPtr pEnable)
+{
+    CHECK_HANDLE CHECK_ACCESS LOCK
+
+    if(actionEnableType < 0 || actionEnableType >= AD_ACTION_ENABLE_SIZE)
+            return AD_ERROR_INVALID_ACTION_ENABLE_TYPE; 
+
+    if(pEnable == NULL)
+        return AD_ERROR_INVALID_POINTER;
+
+	if (viewType == AD_VIEW_TYPE_GROUPED_THUMBNAILS)
+		*pEnable = handle->Result()->CanApply(actionEnableType, viewType) ? TRUE : FALSE;
+	else
+		*pEnable = handle->Result()->CanApply(actionEnableType) ? TRUE : FALSE;
+
+    return AD_OK;
+}
+
 DLLAPI adError adRenameCurrentA(adHandle handle, adRenameCurrentType renameCurrentType, const adCharA* newFileName)
 {
     CHECK_HANDLE CHECK_ACCESS LOCK CHECK_POINTER(newFileName) 
@@ -550,6 +568,13 @@ DLLAPI adError adImageInfoRenameW(adHandle handle, adSize groupId, adSize index,
     CHECK_HANDLE CHECK_ACCESS LOCK CHECK_POINTER(newFileName) 
 
     return handle->Result()->Rename(groupId, index, newFileName);
+}
+
+DLLAPI adError adImageInfoDeleteW(adHandle handle, adSize groupId, adSize index)
+{
+    CHECK_HANDLE CHECK_ACCESS LOCK
+
+    return handle->Result()->Delete(groupId, index);
 }
 
 DLLAPI adError adLoadBitmapA(adHandle handle, const adCharA* fileName, adBitmapPtr pBitmap)

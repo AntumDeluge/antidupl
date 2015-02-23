@@ -59,6 +59,7 @@ namespace AntiDupl.NET
         private ToolStripButton m_deleteFirstButton;
         private ToolStripButton m_deleteSecondButton;
         private ToolStripButton m_deleteBothButton;
+        private ToolStripButton m_deleteSelectedButton;
         private ToolStripButton m_deleteDefectButton;
 
         private ToolStripButton m_helpButton;
@@ -124,6 +125,7 @@ namespace AntiDupl.NET
             m_deleteFirstButton = InitFactory.ToolButton.Create("DeleteFirstsVerticalButton", CoreDll.LocalActionType.DeleteFirst, MakeAction);
             m_deleteSecondButton = InitFactory.ToolButton.Create("DeleteSecondsVerticalButton", CoreDll.LocalActionType.DeleteSecond, MakeAction);
             m_deleteBothButton = InitFactory.ToolButton.Create("DeleteBothesVerticalButton", CoreDll.LocalActionType.DeleteBoth, MakeAction);
+            m_deleteSelectedButton = InitFactory.ToolButton.Create("DeleteSelectedVerticalButton", CoreDll.LocalActionType.DeleteSelected, MakeAction);
 
             m_deleteDefectButton = InitFactory.ToolButton.Create("DeleteDefectsVerticalButton", CoreDll.LocalActionType.DeleteDefect, MakeAction);
 
@@ -160,6 +162,7 @@ namespace AntiDupl.NET
             m_deleteSecondButton.ToolTipText = s.ResultsListViewContextMenu_DeleteSecondItem_Text;
             m_deleteBothButton.ToolTipText = s.ResultsListViewContextMenu_DeleteBothItem_Text;
             m_deleteDefectButton.ToolTipText = s.ResultsListViewContextMenu_DeleteDefectItem_Text;
+            m_deleteSelectedButton.ToolTipText = "Удалить выделенные";
 
             m_helpButton.ToolTipText = s.MainMenu_Help_HelpMenuItem_Text;
         }
@@ -179,15 +182,20 @@ namespace AntiDupl.NET
         {
             ToolStripItem item = (ToolStripItem)sender;
             CoreDll.LocalActionType action = (CoreDll.LocalActionType)item.Tag;
-            m_mainSplitContainer.resultsListView.MakeAction(action, CoreDll.TargetType.Selected);
+            if (m_options.resultsOptions.viewMode == ResultsOptions.ViewMode.GroupedThumbnails)
+                m_mainSplitContainer.resultsListView.MakeAction(action, CoreDll.TargetType.SelectedImages);
+            else
+                m_mainSplitContainer.resultsListView.MakeAction(action, CoreDll.TargetType.Selected);
         }
         
         private void OnSelectedResultsChanged()
         {
-            bool mistake = m_core.CanApply(CoreDll.ActionEnableType.Any);
+            CoreDll.ViewType viewType = m_options.resultsOptions.ViewType();
+            bool mistake = m_core.CanApply(CoreDll.ActionEnableType.Any, viewType);
             bool performHint = m_core.CanApply(CoreDll.ActionEnableType.PerformHint);
             bool duplPair = m_core.CanApply(CoreDll.ActionEnableType.DuplPair);
-            bool defect = m_core.CanApply(CoreDll.ActionEnableType.Defect);
+            bool duplPairGroup = m_core.CanApply(CoreDll.ActionEnableType.DuplPair, viewType);
+            bool defect = m_core.CanApply(CoreDll.ActionEnableType.Defect, viewType);
 
             m_mistakeButton.Enabled = mistake;
             m_performHintButton.Enabled = performHint;
@@ -195,6 +203,7 @@ namespace AntiDupl.NET
             m_deleteSecondButton.Enabled = duplPair;
             m_deleteBothButton.Enabled = duplPair;
             m_deleteDefectButton.Enabled = defect;
+            m_deleteSelectedButton.Enabled = duplPairGroup;
 
             m_undoButton.Enabled = m_core.CanApply(CoreDll.ActionEnableType.Undo);
             m_redoButton.Enabled = m_core.CanApply(CoreDll.ActionEnableType.Redo);
@@ -242,18 +251,30 @@ namespace AntiDupl.NET
             Items.Add(new ToolStripSeparator());
             Items.Add(m_undoButton);
             Items.Add(m_redoButton);
-            if (viewMode == ResultsOptions.ViewMode.VerticalPairTable || viewMode == ResultsOptions.ViewMode.HorizontalPairTable)
+            if (viewMode == ResultsOptions.ViewMode.VerticalPairTable || 
+                viewMode == ResultsOptions.ViewMode.HorizontalPairTable ||
+                viewMode == ResultsOptions.ViewMode.GroupedThumbnails)
             {
                 Items.Add(new ToolStripSeparator());
                 Items.Add(m_mistakeButton);
+            }
+            if (viewMode == ResultsOptions.ViewMode.VerticalPairTable ||
+                viewMode == ResultsOptions.ViewMode.HorizontalPairTable)
+            {
                 Items.Add(m_performHintButton);
                 Items.Add(new ToolStripSeparator());
                 Items.Add(m_deleteFirstButton);
                 Items.Add(m_deleteSecondButton);
                 Items.Add(m_deleteBothButton);
+            }
+            if (viewMode == ResultsOptions.ViewMode.VerticalPairTable ||
+                viewMode == ResultsOptions.ViewMode.HorizontalPairTable)
+            {
                 Items.Add(new ToolStripSeparator());
                 Items.Add(m_deleteDefectButton);
             }
+            if (viewMode == ResultsOptions.ViewMode.GroupedThumbnails)
+                Items.Add(m_deleteSelectedButton);
             Items.Add(new ToolStripSeparator());
             Items.Add(m_helpButton);
 
@@ -271,6 +292,8 @@ namespace AntiDupl.NET
                 m_deleteSecondButton.Image = Resources.Images.Get("DeleteSecondsHorizontalButton");
                 m_deleteBothButton.Image = Resources.Images.Get("DeleteBothesHorizontalButton");
             }
+            if (viewMode == ResultsOptions.ViewMode.GroupedThumbnails)
+                m_deleteDefectButton.Image = Resources.Images.Get("DeleteDefectsVerticalButton");
         }
 
         private void OnThresholdDifferenceChanged(object sender, EventArgs e)

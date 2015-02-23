@@ -32,6 +32,9 @@ using System.IO;
 
 namespace AntiDupl.NET
 {
+    /// <summary>
+    /// Панель просмотра информации об изображение.
+    /// </summary>
     public class ImagePreviewPanel : TableLayoutPanel
     {
         private const int MAX_PATH = 260;
@@ -283,7 +286,7 @@ namespace AntiDupl.NET
                             Color.Red : TableLayoutPanel.DefaultForeColor;
                     m_imageBlurringLabel.ForeColor = m_currentImageInfo.blurring > m_neighbourImageInfo.blurring ?
                             Color.Red : TableLayoutPanel.DefaultForeColor;
-                    m_imageExifLabel.ForeColor = ExifEqual(m_currentImageInfo.exifInfo, m_neighbourImageInfo.exifInfo) ?
+                    m_imageExifLabel.ForeColor = CoreDll.ExifEqual(m_currentImageInfo.exifInfo, m_neighbourImageInfo.exifInfo) ?
                         TableLayoutPanel.DefaultForeColor : Color.Red;
                 }
             }
@@ -299,7 +302,7 @@ namespace AntiDupl.NET
                         Color.Red : TableLayoutPanel.DefaultForeColor;
                 m_imageBlurringLabel.ForeColor = m_currentImageInfo.blurring > m_neighbourImageInfo.blurring ?
                         Color.Red : TableLayoutPanel.DefaultForeColor;
-                m_imageExifLabel.ForeColor = ExifEqual(m_currentImageInfo.exifInfo, m_neighbourImageInfo.exifInfo) ?
+                m_imageExifLabel.ForeColor = CoreDll.ExifEqual(m_currentImageInfo.exifInfo, m_neighbourImageInfo.exifInfo) ?
                     TableLayoutPanel.DefaultForeColor : Color.Red;
             }
             if (updateCurrent || updateNeighbour)
@@ -312,24 +315,6 @@ namespace AntiDupl.NET
             }
         }
 
-        /// <summary>
-        /// Проверка равны ли Exif.
-        /// </summary>
-        private bool ExifEqual(CoreDll.adImageExifW imageExif1, CoreDll.adImageExifW imageExif2)
-        {
-            if (imageExif1.isEmpty == imageExif1.isEmpty &&
-                imageExif1.artist.CompareTo(imageExif2.artist) == 0 &&
-                imageExif1.dateTime.CompareTo(imageExif2.dateTime) == 0 &&
-                imageExif1.equipMake.CompareTo(imageExif2.equipMake) == 0 &&
-                imageExif1.equipModel.CompareTo(imageExif2.equipModel) == 0 &&
-                imageExif1.imageDescription.CompareTo(imageExif2.imageDescription) == 0 &&
-                imageExif1.softwareUsed.CompareTo(imageExif2.softwareUsed) == 0 &&
-                imageExif1.userComment.CompareTo(imageExif2.userComment) == 0)
-                return true;
-
-            return false;
-        }
-        
         /// <summary>
         /// Проверяет, нужно ли обновление текущей информации об изображении.
         /// </summary>

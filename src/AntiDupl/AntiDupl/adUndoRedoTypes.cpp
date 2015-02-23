@@ -111,6 +111,7 @@ namespace ad
         return AD_OK;
     }
 
+	// Устанавливает выделенные элементы
     adError TUndoRedoStage::SetSelection(adSizePtr pStartFrom, adSize size, adBool value)
     {
         if(pStartFrom == NULL)
@@ -143,6 +144,19 @@ namespace ad
             pSelection[i] = results[*pStartFrom + i]->selected ? TRUE : FALSE;
 
         return AD_OK;
+    }
+
+	// Устанавливаем выделение в переданной группе
+	adError TUndoRedoStage::SetSelection(adSize groupId, adSize index, adSelectionType selectionType, TStatus *pStatus)
+    {
+        //return groups.SetSelection(groupId, index, selectionType);
+		// обновляется только список изображений images
+		
+		//groups.Set(results, pStatus);
+		//groups.Export(results);
+		//UpdateGroups();
+		return groups.SetSelection(groupId, index, selectionType);
+		//надо обновить результаты из групп
     }
 
     adError TUndoRedoStage::Export(adSizePtr pStartFrom, adResultPtrA pResult, adSizePtr pResultSize) const

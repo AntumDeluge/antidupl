@@ -288,9 +288,12 @@ namespace ad
 		return m_pUndoRedoEngine->Current()->groups.Export(groupId, pStartFrom, pImageInfo, pImageInfoSize);
 	}
 
+	// не работает
 	adError TResultStorage::SetSelection(adSize groupId, adSize index, adSelectionType selectionType)
 	{
-		return m_pUndoRedoEngine->Current()->groups.SetSelection(groupId, index, selectionType);
+		// не работает со системой отката
+		//return m_pUndoRedoEngine->Current()->groups.SetSelection(groupId, index, selectionType);
+		return m_pUndoRedoEngine->Current()->SetSelection(groupId, index, selectionType, m_pStatus);
 	}
 
 	adError TResultStorage::GetSelection(adSize groupId, adSizePtr pStartFrom, adBoolPtr pSelection, adSizePtr pSelectionSize) const
@@ -424,11 +427,12 @@ namespace ad
     {
         if(actionEnableType <= AD_ACTION_ENABLE_PEFORM_HINT)
         {
+			// идем по списку результатов
             TResultPtrVector &results = m_pUndoRedoEngine->Current()->results;
             for (size_t i = 0; i < results.size(); i++)
             {
                 const TResult &result = *results[i];
-                if (result.selected)
+                if (result.selected) //если выбран
                 {
                     switch (actionEnableType)
                     {
@@ -464,5 +468,23 @@ namespace ad
 
         return false;
     }
-    //-------------------------------------------------------------------------
+	
+	bool TResultStorage::CanApply(adActionEnableType actionEnableType, adViewType viewType) const
+    {
+		return m_pUndoRedoEngine->Current()->groups.CanApply(actionEnableType);
+	}
+
+	// Удаляет файл с заданной группой и индексом
+    adError TResultStorage::Delete(adSize groupId, adSize index)
+    {
+        TImageGroupPtr pImageGroup = m_pUndoRedoEngine->Current()->groups.Get(groupId, false);
+        if(pImageGroup == NULL)
+            return AD_ERROR_INVALID_GROUP_ID;
+
+        TImageInfoPtrVector & images = pImageGroup->images;
+        if(index >= images.size())
+            return AD_ERROR_INVALID_INDEX;
+
+        return m_pUndoRedoEngine->Delete(groupId, index) ? AD_OK : AD_ERROR_UNKNOWN;
+    }
 }

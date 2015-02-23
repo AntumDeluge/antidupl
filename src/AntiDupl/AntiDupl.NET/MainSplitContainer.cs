@@ -44,16 +44,16 @@ namespace AntiDupl.NET
         CoreLib m_core;
         private CoreOptions m_coreOptions;
 
+        public ResultsListView resultsListView { get { return m_resultsListView; } }
         private ResultsListView m_resultsListView;
         private ResultsPreviewContainer m_resultsPreviewContainer;
 
+        public ThumbnailGroupTable thumbnailGroupTable { get { return m_thumbnailGroupTable; } }
         private ThumbnailGroupTable m_thumbnailGroupTable;
         private ThumbnailPreview m_thumbnailPreview;
         
         bool m_setOrientationNow = false;
         bool m_atLeastOneTimeSetOrientation = false;
-
-        public ResultsListView resultsListView { get { return m_resultsListView; } }
 
         public delegate void UpdateResultsHandler();
         public event UpdateResultsHandler OnUpdateResults;
@@ -233,6 +233,9 @@ namespace AntiDupl.NET
             }
         }
 
+        /// <summary>
+        /// Обновляем результаты после действий
+        /// </summary>
         public void UpdateResults()
         {
             if (m_options.resultsOptions.IsPairTableView())

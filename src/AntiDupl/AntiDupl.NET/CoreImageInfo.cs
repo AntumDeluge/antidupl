@@ -27,6 +27,9 @@ using System.Text;
 
 namespace AntiDupl.NET
 {
+    /// <summary>
+    /// Информация об одном изображение.
+    /// </summary>
     public class CoreImageInfo
     {
         public ulong id;
@@ -113,12 +116,12 @@ namespace AntiDupl.NET
 
         public string GetBlockinessString()
         {
-            return blockiness.ToString("F2");
+            return blockiness.ToString("F3");
         }
         
         public string GetBlurringString()
         {
-            return blurring.ToString("F2");
+            return blurring.ToString("F3");
         }
 
         public string GetFileTimeString()

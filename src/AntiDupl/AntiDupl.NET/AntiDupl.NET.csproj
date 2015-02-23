@@ -48,6 +48,7 @@
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -72,7 +73,8 @@
   -->
   <PropertyGroup>
     <PostBuildEvent>$(SolutionDir)\..\..\data\CopyData.cmd $(SolutionDir)\..\..\data $(SolutionDir)\..\..\bin\$(ConfigurationName)</PostBuildEvent>
-    <PreBuildEvent>$(SolutionDir)\Antidupl.NET\External.cmd $(SolutionDir)\Antidupl.NET</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -107,8 +109,10 @@
     <Compile Include="DynamicModule.cs" />
     <Compile Include="External.cs" />
     <Compile Include="FolderOpener.cs" />
-    <Compile Include="Rename.cs" />
     <Compile Include="ThumbnailGroupTable.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ThumbnailPanelContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ThumbnailPreview.cs">
@@ -236,7 +240,7 @@
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
-      <ProductName>Клиентский профиль .NET Framework 3.5 SP1</ProductName>
+      <ProductName>Профиль клиента .NET Framework</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">

@@ -30,17 +30,19 @@ namespace ad
 {
 	TImageGroup::TImageGroup(size_t id_)
 		: id(id_)
+		, type(AD_RESULT_NONE)
 		, invalidHint(false)
 	{
 	}
 
 	TImageGroup::TImageGroup(const TImageGroup & imageGroup)
 		: id(imageGroup.id)
+		, type(imageGroup.type)
 		, invalidHint(imageGroup.invalidHint)
 	{
 	}
 
-	// Копируем из списка результатов информацию об изображениях в наш контейнер images.
+	// Копируем из списка результатов results информацию об изображениях в наш контейнер images.
 	void TImageGroup::UpdateImages()
 	{
 		TImageInfoPtrSet buffer;
@@ -52,7 +54,39 @@ namespace ad
 				buffer.insert(pResult->second);
 		}
 		images.assign(buffer.begin(), buffer.end());
+		type = results.front()->type;
 	}
+
+	//Для отображения групп TResult не нужна так как предназначена для пар дубликатов
+	/*void TImageGroup::UpdateResults()
+	{
+		TResultPtrList buffer;
+		//TResultPtr pResult = new TResult; //FIXME leak
+		//if (results.size() == images.size())
+		{
+			//int i = 0;
+			for(TResultPtrList::iterator it = results.begin(); it != results.end(); ++it)
+			{
+				TResultPtr pResult = *it;
+				for(TImageInfoPtrVector::iterator it = images.begin(); it != images.end(); ++it)
+				{
+					TImageInfoPtr pImage = *it;
+					//if (pResult->first->index == pImage->index)
+					if (pResult->first == pImage)
+					{
+						//pResult->first = pImage;
+						pResult->selected = pImage->selected;
+					}
+					//pResult->first = pImage;
+					//buffer.push_back(pResult);
+					//if(pResult->type == AD_RESULT_DUPL_IMAGE_PAIR)
+						//buffer.insert(pImage);
+				}
+				//pResult->selected = images[i]->selected;
+			}
+			//results.assign(buffer.begin(), buffer.end());
+		}
+	}*/
 
 	// Экспортируем в группу для экспорта из dll.
 	bool TImageGroup::Export(adGroupPtr pGroup) const
@@ -62,6 +96,7 @@ namespace ad
 
 		pGroup->id = id;
 		pGroup->size = images.size();
+		pGroup->type = type;
 
 		return true;
 	}
@@ -125,7 +160,7 @@ namespace ad
 		}
 	}
 
-	// Копируем из переданного хранилиша в карту
+	// Копируем из переданного хранилиша (карты) в карту
 	void TImageGroupStorage::Assign(const TImageGroupStorage & storage)
 	{
 		Clear();
@@ -133,7 +168,7 @@ namespace ad
 			m_map[it->first] = new TImageGroup(*it->second);
 	}
 
-	// Устанавливает в переданном списке результатов группы из внутреннего хранилища групп и очищает его.
+	// Устанавливает в переданном списке результатов, если результаты не определены, группы из внутреннего хранилища групп и очищает его. Также добавляет результаты для групп.
 	void TImageGroupStorage::Set(TResultPtrVector & results, TStatus * pStatus)
 	{
 		pStatus->SetProgress(0, 0);
@@ -144,6 +179,7 @@ namespace ad
 		{
 			pStatus->SetProgress(current++, total);
 			TResultPtr pResult = *it;
+			// Действия для неопределенных групп в списке результата.
 			if(pResult->group == AD_UNDEFINED)
 			{
 				if(pResult->type == AD_RESULT_DUPL_IMAGE_PAIR)
@@ -228,11 +264,13 @@ namespace ad
 			pImageGroup->results.clear();
 		}
 
+		// Получаем группу и добавляем в переданные результаты
 		for(TResultPtrVector::iterator resultIt = results.begin(); resultIt != results.end(); ++resultIt)
 		{
 			TResultPtr pResult = *resultIt;
 			TImageGroupPtr pImageGroup = Get(pResult->group);
 			pImageGroup->results.push_back(pResult);
+			pImageGroup->type = pResult->type;
 		}
 
 		for(TMap::iterator groupIt = m_map.begin(); groupIt != m_map.end(); ++groupIt)
@@ -345,6 +383,7 @@ namespace ad
 		return AD_OK;
 	}
 
+	// Уставновка выделеннных изображений в одной группе в хранилище images для переданных группы и индекса.
 	adError TImageGroupStorage::SetSelection(adSize groupId, adSize index, adSelectionType selectionType)
 	{
 		if(selectionType < AD_SELECTION_SELECT_CURRENT || selectionType >= AD_SELECTION_SIZE)            
@@ -387,6 +426,27 @@ namespace ad
 			return AD_ERROR_INVALID_SELECTION_TYPE;
 		}
 
+		//pImageGroup->UpdateResults();
+
+
+		//Изменяем выбранные в результатах
+		/*for(TResultPtrList::iterator resultIt = pImageGroup->begin(); resultIt != pImageGroup->results.end(); ++resultIt)
+		{
+			TResultPtr pResult = *resultIt;
+			pResult->selected = pResult->first->selected;
+			/*if (pResult->group == groupId)
+				pResult->
+		}*/
+
+		//меняем результаты FIXME нормально это тут размещать?
+		/*for(TResultPtrVector::iterator resultIt = results.begin(); resultIt != results.end(); ++resultIt)
+		{
+			TResultPtr pResult = *resultIt;
+			if (pResult->group == groupId)
+				pResult->
+
+		}*/
+
 		return AD_OK;
 	}
 
@@ -415,5 +475,82 @@ namespace ad
 		}
 
 		return AD_OK;
+	}
+
+	void TImageGroupStorage::Export(TResultPtrVector & resultsForFill) const //обещает не менять this
+	{
+		resultsForFill.clear();
+
+		for(TMap::const_iterator groupIt = m_map.begin(); groupIt != m_map.end(); ++groupIt)
+		{
+			TImageGroupPtr pImageGroup = groupIt->second;
+			//results.push_back(pImageGroup->results);
+			//pImageGroup->UpdateResults();
+			TResultPtrList & resultsGroup = pImageGroup->results;
+			for(TResultPtrList::iterator resultIt = resultsGroup.begin(); resultIt != resultsGroup.end(); ++resultIt)
+			{
+				TResultPtr pResult = *resultIt;
+				resultsForFill.push_back(pResult);
+			}
+		}
+	}
+
+	bool TImageGroupStorage::CanApply(adActionEnableType actionEnableType) const
+	{
+		if(actionEnableType <= AD_ACTION_ENABLE_PEFORM_HINT)
+        {
+			// идем по списку групп
+			for(TMap::const_iterator groupIt = m_map.begin(); groupIt != m_map.end(); ++groupIt)
+			{
+				TImageGroupPtr pImageGroup = groupIt->second;
+				
+				for(TImageInfoPtrVector::iterator it = pImageGroup->images.begin(); it != pImageGroup->images.end(); ++it)
+				{
+					TImageInfoPtr pImage = *it;
+					// если хоть одна картинка выделена то можно
+					if (pImage->selected)
+						return true;
+				}
+			}
+
+        }
+		return false;
+	}
+
+	/*bool TImageGroupStorage::ApplyTo(adLocalActionType localActionType)
+	{
+		// идем по списку групп
+		for(TMap::const_iterator groupIt = m_map.begin(); groupIt != m_map.end(); ++groupIt)
+		{
+			TImageGroupPtr pImageGroup = groupIt->second;
+			
+			for(TImageInfoPtrVector::iterator it = pImageGroup->images.begin(); it != pImageGroup->images.end(); ++it)
+			{
+				TImageInfoPtr pImage = *it;
+				if (pImage->selected)
+				{
+					switch(localActionType)
+					{
+					case AD_LOCAL_ACTION_DELETE_SELECTED:
+						return true;
+						//return Delete(pImage);
+					}
+				}
+		}
+	}*/
+
+	void TImageGroupStorage::DeleteGroupWithOneImage()
+	{
+		for(TMap::iterator groupIt = m_map.begin(); groupIt != m_map.end(); )
+		{
+			TImageGroupPtr pImageGroup = groupIt->second;
+			// если группу надо удалить
+			if ((pImageGroup->type == AD_RESULT_DUPL_IMAGE_PAIR && pImageGroup->images.size() == 1) ||
+				pImageGroup->images.size() == 0)
+				groupIt = m_map.erase(groupIt);
+			else
+				++groupIt;
+		}
+		UpdateVector();
 	}
 }

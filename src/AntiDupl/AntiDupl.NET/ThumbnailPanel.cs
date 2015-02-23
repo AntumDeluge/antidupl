@@ -39,8 +39,14 @@ namespace AntiDupl.NET
         private const int EBW = 2;//External border width
 
         private CoreLib m_core;
+        public CoreGroup Group { get { return m_group; } }
         private CoreGroup m_group;
+        /// <summary>
+        /// Индекс картинки в группе.
+        /// </summary>
+        public int Index { get { return m_index; } }
         private int m_index;
+        public CoreImageInfo ImageInfo { get { return m_group.images[m_index]; } }
         private AntiDupl.NET.Options m_options;
         private ThumbnailGroupPanel m_thumbnailGroupPanel;
 
@@ -49,11 +55,33 @@ namespace AntiDupl.NET
         private CheckBox m_checkBox;
         private PictureBox m_pictureBox;
         private TableLayoutPanel m_infoLayout;
+        private TableLayoutPanel m_infoLayout2;
         private Label m_fileSizeLabel;
         private Label m_imageSizeLabel;
         private Label m_imageTypeLabel;
 
+        private Label m_imageBlocknessLabel;
+        private Label m_imageBlurringLabel;
+        private Label m_imageExifLabel;
+
         private Label m_fileNameLabel;
+
+        /// <summary>
+        /// Всплывающая подсказка
+        /// </summary>
+        private ToolTip m_toolTip;
+
+        public bool Selected
+        { 
+            get
+            {
+                return m_checkBox.Checked;
+            }
+            set
+            {
+                m_checkBox.Checked = value;
+            }
+        }
         
         public Bitmap Thumbnail
         {
@@ -77,8 +105,6 @@ namespace AntiDupl.NET
             }
         }
 
-        public CoreImageInfo ImageInfo { get { return m_group.images[m_index]; } }
-
         public ThumbnailPanel(CoreLib core, AntiDupl.NET.Options options, CoreGroup group, int index, ThumbnailGroupPanel thumbnailGroupPanel)
         {
             m_core = core;
@@ -92,6 +118,8 @@ namespace AntiDupl.NET
 
         private void InitializeComponents()
         {
+            Strings s = Resources.Strings.Current;
+
             DoubleBuffered = true;
             BackColor = Color.Transparent;
 
@@ -99,16 +127,18 @@ namespace AntiDupl.NET
             m_mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             m_mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             m_mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            m_mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
 
             m_controlLayout = InitFactory.Layout.Create(1, 1, 0, 0);
-            m_controlLayout.Height = 16;
+            m_controlLayout.Height = 20;
             m_checkBox = new CheckBox();
             m_checkBox.Location = new Point(0, 0);
             m_checkBox.Margin = new Padding(0);
             m_checkBox.Padding = new Padding(0);
-            m_checkBox.Height = 16;
+            m_checkBox.Height = 18;
+            //m_checkBox.Height = m_checkBox.Font.Height;
             m_checkBox.Click += new EventHandler(OnCheckBoxClick);
-
 
             m_controlLayout.Controls.Add(m_checkBox, 0, 0);
 
@@ -126,24 +156,48 @@ namespace AntiDupl.NET
             m_pictureBox.Click += new EventHandler(OnClick);
 
             m_fileSizeLabel = CreateLabel();
-
             m_imageSizeLabel = CreateLabel();
-
             m_imageTypeLabel = CreateLabel();
-
             m_fileNameLabel = CreateLabel();
+            m_imageBlocknessLabel = CreateLabel();
+            m_imageBlurringLabel = CreateLabel();
+
+            m_imageExifLabel = new Label();
+            m_imageExifLabel.Location = new Point(0, 0);
+            m_imageExifLabel.BorderStyle = BorderStyle.Fixed3D;
+            m_imageExifLabel.Padding = new Padding(0, 0, 0, 0);
+            m_imageExifLabel.Margin = new Padding(0, 0, 0, 0);
+            m_imageExifLabel.TextAlign = ContentAlignment.TopCenter;
+            m_imageExifLabel.AutoSize = false;
+            m_imageExifLabel.FlatStyle = FlatStyle.System;
+            m_imageExifLabel.Text = s.ImagePreviewPanel_EXIF_Text;
+            //m_imageExifLabel.Visible = false;
 
             m_infoLayout = InitFactory.Layout.Create(3, 1, 0, 0);
             m_infoLayout.Height = 16;
+            //m_infoLayout.Height = (m_imageSizeLabel.Font.Height + m_imageSizeLabel.Margin.Vertical + m_imageSizeLabel.Padding.Vertical + 3) * 2;*/
 
             m_infoLayout.Controls.Add(m_fileSizeLabel, 0, 0);
             m_infoLayout.Controls.Add(m_imageSizeLabel, 1, 0);
             m_infoLayout.Controls.Add(m_imageTypeLabel, 2, 0);
 
+            m_infoLayout2 = InitFactory.Layout.Create(3, 1, 0, 0);
+            m_infoLayout2.Height = 16;
+
+            m_infoLayout2.Controls.Add(m_imageBlocknessLabel, 0, 1);
+            m_infoLayout2.Controls.Add(m_imageBlurringLabel, 1, 1);
+            m_infoLayout2.Controls.Add(m_imageExifLabel, 2, 1);
+
             m_mainLayout.Controls.Add(m_controlLayout, 0, 0);
             m_mainLayout.Controls.Add(m_pictureBox, 0, 1);
             m_mainLayout.Controls.Add(m_infoLayout, 0, 2);
-            m_mainLayout.Controls.Add(m_fileNameLabel, 0, 3);
+            m_mainLayout.Controls.Add(m_infoLayout2, 0, 3);
+            //m_mainLayout.Controls.Add(m_fileNameLabel, 0, 3);
+
+            m_toolTip = new ToolTip();
+            m_toolTip.ShowAlways = true;
+            m_toolTip.SetToolTip(m_imageBlocknessLabel, s.ResultsListView_Blockiness_Column_Text);
+            m_toolTip.SetToolTip(m_imageBlurringLabel, s.ResultsListView_Blurring_Column_Text);
 
             Controls.Add(m_mainLayout);
 
@@ -168,19 +222,31 @@ namespace AntiDupl.NET
 
         private void SetSize()
         {
+            m_checkBox.Width = 128;
+
             m_fileSizeLabel.Width = 40;
-
             m_imageSizeLabel.Width = 60;
-
             m_imageTypeLabel.Width = 28;
+
+            m_imageBlocknessLabel.Width = 40;
+            m_imageBlurringLabel.Width = 40;
+            m_imageExifLabel.Width = 48;
             
             m_fileNameLabel.Width = 128;
             m_fileNameLabel.Location = new Point(0, 0);
 
             Font font = m_fileSizeLabel.Font;
             int width = m_pictureBox.Width + Padding.Horizontal;
-            int height = m_pictureBox.Height + (font.Height + m_fileSizeLabel.Margin.Vertical + m_fileSizeLabel.Padding.Vertical +
-                m_infoLayout.Padding.Vertical)*3 + m_mainLayout.Padding.Vertical + m_mainLayout.Margin.Vertical + Padding.Vertical + 8;
+            /*int height = m_pictureBox.Height + 
+                (font.Height + m_fileSizeLabel.Margin.Vertical + m_fileSizeLabel.Padding.Vertical +
+                m_infoLayout.Padding.Vertical)*4 + 
+                m_mainLayout.Padding.Vertical + m_mainLayout.Margin.Vertical + Padding.Vertical + 8;*/
+            int height = m_controlLayout.Height +
+                         m_pictureBox.Height +
+                         m_infoLayout.Height +
+                         m_infoLayout2.Height + 
+                         //font.Height + m_fileSizeLabel.Margin.Vertical + m_fileSizeLabel.Padding.Vertical + m_infoLayout.Padding.Vertical +
+                         m_mainLayout.Padding.Vertical + m_mainLayout.Margin.Vertical + Padding.Vertical + 2;
             ClientSize = new Size(width, height);
         }
 
@@ -191,12 +257,34 @@ namespace AntiDupl.NET
             m_fileSizeLabel.Text = info.GetFileSizeString();
             m_imageSizeLabel.Text = string.Format("{0}×{1}", info.width, info.height);
             m_imageTypeLabel.Text = (info.type == CoreDll.ImageType.None ? "   " : info.GetImageTypeString());
-            m_fileNameLabel.Text = Path.GetFileNameWithoutExtension(info.path);
+            m_checkBox.Text = m_fileNameLabel.Text = Path.GetFileNameWithoutExtension(info.path);
+            m_toolTip.SetToolTip(m_checkBox, info.path);
+            //m_toolTip.SetToolTip(m_fileNameLabel, info.path);
+            m_imageBlocknessLabel.Text = info.blockiness.ToString("F3");
+            m_imageBlurringLabel.Text = info.blurring.ToString("F3");
+            if (info.exifInfo.isEmpty == CoreDll.FALSE)
+            {
+                m_imageExifLabel.Visible = true;
+                SetExifTooltip(info);
+                m_imageExifLabel.ForeColor = m_group.exifDiffrent ? Color.Red : TableLayoutPanel.DefaultForeColor;
+            }
+            else
+                m_imageExifLabel.Visible = false;
+
+            //устанавливаем подсветку
+            m_fileSizeLabel.ForeColor = info.size == m_group.fileSizeMax ? TableLayoutPanel.DefaultForeColor : Color.Red;
+            m_imageSizeLabel.ForeColor = (uint)(info.width * info.height) == m_group.imageSizeMax ? TableLayoutPanel.DefaultForeColor : Color.Red;
+            m_imageTypeLabel.ForeColor = m_group.imageTypeDiffrent ? Color.Red : TableLayoutPanel.DefaultForeColor;
+            m_imageBlocknessLabel.ForeColor = info.blockiness == m_group.imageBlocknessMax ? TableLayoutPanel.DefaultForeColor : Color.Red;
+            m_imageBlurringLabel.ForeColor = info.blurring == m_group.imageBlurringMax ? TableLayoutPanel.DefaultForeColor : Color.Red;
 
             bool[] selected = m_core.GetSelection(m_group.id, (uint)m_index, 1);
             m_checkBox.Checked = selected[0];
         }
 
+        /// <summary>
+        /// Устанавливаем выделенным текущий.
+        /// </summary>
         private void OnCheckBoxClick(object sender, EventArgs e)
         {
             if (m_checkBox.Checked)
@@ -208,11 +296,58 @@ namespace AntiDupl.NET
                 m_core.SetSelection(m_group.id, m_index, CoreDll.SelectionType.UnselectCurrent);
             }
             m_thumbnailGroupPanel.Table.ChangeCurrentThumbnail(m_group, m_index);
+            m_thumbnailGroupPanel.Table.SelectedResultsChanged();
         }
 
+        /// <summary>
+        /// Обновляем превью.
+        /// </summary>
         private void OnClick(object sender, EventArgs e)
         {
             m_thumbnailGroupPanel.Table.ChangeCurrentThumbnail(m_group, m_index);
+        }
+
+        private List<string> GetExifList(CoreImageInfo currentImageInfo, Strings s)
+        {
+            List<string> exifList = new List<string>();
+            if (!String.IsNullOrEmpty(currentImageInfo.exifInfo.imageDescription))
+                exifList.Add(s.ImagePreviewPanel_EXIF_Tooltip_ImageDescription + currentImageInfo.exifInfo.imageDescription);
+            if (!String.IsNullOrEmpty(currentImageInfo.exifInfo.equipMake))
+                exifList.Add(s.ImagePreviewPanel_EXIF_Tooltip_EquipMake + currentImageInfo.exifInfo.equipMake);
+            if (!String.IsNullOrEmpty(currentImageInfo.exifInfo.equipModel))
+                exifList.Add(s.ImagePreviewPanel_EXIF_Tooltip_EquipModel + currentImageInfo.exifInfo.equipModel);
+            if (!String.IsNullOrEmpty(currentImageInfo.exifInfo.softwareUsed))
+                exifList.Add(s.ImagePreviewPanel_EXIF_Tooltip_SoftwareUsed + currentImageInfo.exifInfo.softwareUsed);
+            if (!String.IsNullOrEmpty(currentImageInfo.exifInfo.dateTime))
+                exifList.Add(s.ImagePreviewPanel_EXIF_Tooltip_DateTime + currentImageInfo.exifInfo.dateTime);
+            if (!String.IsNullOrEmpty(currentImageInfo.exifInfo.artist))
+                exifList.Add(s.ImagePreviewPanel_EXIF_Tooltip_Artist + currentImageInfo.exifInfo.artist);
+            if (!String.IsNullOrEmpty(currentImageInfo.exifInfo.userComment))
+                exifList.Add(s.ImagePreviewPanel_EXIF_Tooltip_UserComment + currentImageInfo.exifInfo.userComment);
+            return exifList;
+        }
+
+        /// <summary>
+        /// Устанавливает значение подсказки tooltip для надписи EXIF.
+        /// </summary>
+        private void SetExifTooltip(CoreImageInfo imageInfo)
+        {
+            Strings s = Resources.Strings.Current;
+            string exifSting = String.Empty;
+
+            List<string> exifList = GetExifList(imageInfo, s);
+
+            if (exifList.Count > 0)
+            {
+                for (int i = 0; i < exifList.Count - 1; i++)
+                {
+                    exifSting = exifSting + exifList[i];
+                    exifSting = exifSting + Environment.NewLine;
+                }
+                exifSting = exifSting + exifList[exifList.Count - 1];
+
+                m_toolTip.SetToolTip(m_imageExifLabel, exifSting);
+            }
         }
     }
 }

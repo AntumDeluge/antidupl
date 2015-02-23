@@ -163,7 +163,7 @@ namespace AntiDupl.NET
             Redo = 4,
         }
 
-        public enum LocalActionType : int //то же что и  enum adLocalActionType : adInt32, также еще в class HotKeyOptions enum Action
+        public enum LocalActionType : int //то же что и  enum adLocalActionType : adInt32
         {
             DeleteDefect = 0,
             DeleteFirst = 1,
@@ -179,6 +179,7 @@ namespace AntiDupl.NET
             MoveAndRenameSecondToFirst = 11,
             PerformHint = 12,
             Mistake = 13,
+            DeleteSelected = 14,
         }
 
         public enum ActionEnableType : int
@@ -191,10 +192,17 @@ namespace AntiDupl.NET
             Redo = 5,
         }
 
+        public enum ViewType : int
+        {
+            DuplPair = 0,
+            GroupedThumbnails = 1,
+        }
+
         public enum TargetType : int
         {
             Current = 0,
             Selected = 1,
+            SelectedImages = 2,
         }
 
         public enum RenameCurrentType : int
@@ -448,6 +456,7 @@ namespace AntiDupl.NET
         {
             public IntPtr id;
             public IntPtr size;
+            public ResultType type;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -466,6 +475,24 @@ namespace AntiDupl.NET
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CoreDll.MAX_PATH_EX)]
             public string path;
             public int enableSubFolder;
+        }
+
+        /// <summary>
+        /// Проверка равны ли Exif.
+        /// </summary>
+        public static bool ExifEqual(CoreDll.adImageExifW imageExif1, CoreDll.adImageExifW imageExif2)
+        {
+            if (imageExif1.isEmpty == imageExif2.isEmpty &&
+                imageExif1.artist.CompareTo(imageExif2.artist) == 0 &&
+                imageExif1.dateTime.CompareTo(imageExif2.dateTime) == 0 &&
+                imageExif1.equipMake.CompareTo(imageExif2.equipMake) == 0 &&
+                imageExif1.equipModel.CompareTo(imageExif2.equipModel) == 0 &&
+                imageExif1.imageDescription.CompareTo(imageExif2.imageDescription) == 0 &&
+                imageExif1.softwareUsed.CompareTo(imageExif2.softwareUsed) == 0 &&
+                imageExif1.userComment.CompareTo(imageExif2.userComment) == 0)
+                return true;
+
+            return false;
         }
     
         //-------------------API functions:------------------------------------
@@ -566,6 +593,11 @@ namespace AntiDupl.NET
         public adCanApply_fn adCanApply = null;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
+        public delegate Error adCanApplyView_fn(IntPtr handle, ActionEnableType actionEnableType, ViewType viewType, IntPtr pEnable);
+        [DynamicModuleApi]
+        public adCanApplyView_fn adCanApplyView = null;
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
         public delegate Error adRenameCurrentW_fn(IntPtr handle, RenameCurrentType renameCurrentType, string newFileName);
         [DynamicModuleApi]
         public adRenameCurrentW_fn adRenameCurrentW = null;
@@ -629,6 +661,11 @@ namespace AntiDupl.NET
         public delegate Error adImageInfoRenameW_fn(IntPtr handle, IntPtr groupId, IntPtr index, string newFileName);
         [DynamicModuleApi]
         public adImageInfoRenameW_fn adImageInfoRenameW = null;
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
+        public delegate Error adImageInfoDeleteW_fn(IntPtr handle, IntPtr groupId, IntPtr index);
+        [DynamicModuleApi]
+        public adImageInfoDeleteW_fn adImageInfoDeleteW = null;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
         public delegate Error adLoadBitmapW_fn(IntPtr handle, string fileName, IntPtr pBitmap);

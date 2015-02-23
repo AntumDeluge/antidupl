@@ -43,6 +43,8 @@ namespace ad
 
     typedef TUndoRedoStage* TUndoRedoStagePtr;
     typedef std::deque<TUndoRedoStagePtr> TUndoRedoStagePtrDeque;
+
+	typedef std::map<size_t, TImageGroupPtr> TMap;
     //-------------------------------------------------------------------------
     class TUndoRedoEngine
     {
@@ -62,6 +64,7 @@ namespace ad
 
 		bool RenameCurrent(adRenameCurrentType renameCurrentType, const TString & newFileName);
         bool Rename(adSize groupId, adSize index, const TString & newFileName);
+		bool Delete(adSize groupId, adSize index);
 		bool MoveCurrentGroup(const TString& directory);
 		bool RenameCurrentGroupAs(const TString & fileName);
 

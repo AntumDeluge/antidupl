@@ -1,42 +1,18 @@
-﻿/*
-* AntiDupl.NET Program.
-*
-* Copyright (c) 2002-2015 Yermalayeu Ihar.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy 
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-* copies of the Software, and to permit persons to whom the Software is 
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in 
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-*/
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.ComponentModel;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.Win32;
-using System.ComponentModel;
 
 namespace AntiDupl.NET
 {
-    public class ThumbnailPreviewContextMenu : ContextMenuStrip
+    public class ThumbnailPanelContextMenu : ContextMenuStrip
     {
         private CoreLib m_core;
         private Options m_options;
-        private ThumbnailPreview m_thumbnailPreview;
+        private ThumbnailPanel m_thumbnailPanel;
         private ThumbnailGroupTable m_thumbnailGroupTable;
 
         private ToolStripMenuItem m_copyPathItem;
@@ -49,12 +25,13 @@ namespace AntiDupl.NET
         private ToolStripMenuItem m_unselectCurrent;
         private ToolStripMenuItem m_selectAllInGroup;
         private ToolStripMenuItem m_unselectAllInGroup;
+        private ToolStripMenuItem m_unselectAll;
 
-        public ThumbnailPreviewContextMenu(CoreLib core, Options options, ThumbnailPreview thumbnailPreview, ThumbnailGroupTable thumbnailGroupTable)
+        public ThumbnailPanelContextMenu(CoreLib core, Options options, ThumbnailPanel thumbnailPanel, ThumbnailGroupTable thumbnailGroupTable)
         {
             m_core = core;
             m_options = options;
-            m_thumbnailPreview = thumbnailPreview;
+            m_thumbnailPanel = thumbnailPanel;
             m_thumbnailGroupTable = thumbnailGroupTable;
             InitializeComponents();
             UpdateStrings();
@@ -71,13 +48,13 @@ namespace AntiDupl.NET
             m_openFolderItem = InitFactory.MenuItem.Create(null, null, OpenFolder);
             m_renameImageItem = InitFactory.MenuItem.Create(null, null, RenameImage);
             m_deleteImageItem = InitFactory.MenuItem.Create(null, null, DeleteImage);
-            //m_selectAllButThisItem = InitFactory.MenuItem.Create(null, null, SelectAllButThis);
-            //m_selectAllButThisItem = InitFactory.MenuItem.Create(null, null, new EventHandler(MakeSelect(CoreDll.SelectionType.SelectAllButThis)));
+
             m_selectCurrent = InitFactory.MenuItem.Create(null, CoreDll.SelectionType.SelectCurrent, MakeSelect);
             m_selectAllButThisItemInGroup = InitFactory.MenuItem.Create(null, CoreDll.SelectionType.SelectAllButThis, MakeSelect);
             m_unselectCurrent = InitFactory.MenuItem.Create(null, CoreDll.SelectionType.UnselectCurrent, MakeSelect);
             m_selectAllInGroup = InitFactory.MenuItem.Create(null, CoreDll.SelectionType.SelectAll, MakeSelect);
             m_unselectAllInGroup = InitFactory.MenuItem.Create(null, CoreDll.SelectionType.UnselectAll, MakeSelect);
+            m_unselectAll = InitFactory.MenuItem.Create(null, null, UnselectAll);
             
             Items.Add(new ToolStripSeparator());
         }
@@ -99,6 +76,7 @@ namespace AntiDupl.NET
             Items.Add(m_unselectCurrent);
             Items.Add(m_selectAllInGroup);
             Items.Add(m_unselectAllInGroup);
+            Items.Add(m_unselectAll);
         }
 
         private void UpdateStrings()
@@ -115,12 +93,13 @@ namespace AntiDupl.NET
             m_unselectCurrent.Text = "Снять выделение с текущей в этой группе";
             m_selectAllInGroup.Text = "Выбрать все в этой группе";
             m_unselectAllInGroup.Text = "Снять выделение со всех в этой группе";
+            m_unselectAll.Text = "Снять выделение со всех";
         }
 
         private void OpenImage(object sender, EventArgs e)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.FileName = m_thumbnailPreview.ImageInfo.path;
+            startInfo.FileName = m_thumbnailPanel.ImageInfo.path;
             try
             {
                 Process.Start(startInfo);
@@ -133,12 +112,12 @@ namespace AntiDupl.NET
 
         private void OpenFolder(object sender, EventArgs e)
         {
-            FolderOpener.OpenContainingFolder(m_thumbnailPreview.ImageInfo);
+            FolderOpener.OpenContainingFolder(m_thumbnailPanel.ImageInfo);
         }
 
         private void CopyPath(object sender, EventArgs e)
         {
-            Clipboard.SetText(m_thumbnailPreview.ImageInfo.path);
+            //Clipboard.SetText(m_thumbnailPreview.ImageInfo.path);
         }
 
         /// <summary>
@@ -147,19 +126,20 @@ namespace AntiDupl.NET
         private void RenameImage(object sender, EventArgs e)
         {
             SaveFileDialog dialog = new SaveFileDialog();
-            dialog.FileName = m_thumbnailPreview.ImageInfo.path;
+            dialog.FileName = m_thumbnailPanel.ImageInfo.path;
             dialog.OverwritePrompt = false;
             dialog.AddExtension = true;
             dialog.CheckPathExists = true;
-            dialog.DefaultExt = (new FileInfo(m_thumbnailPreview.ImageInfo.path)).Extension;
+            dialog.DefaultExt = (new FileInfo(m_thumbnailPanel.ImageInfo.path)).Extension;
             dialog.FileOk += new System.ComponentModel.CancelEventHandler(OnRenameImageDialogFileOk);
             dialog.Title = Resources.Strings.Current.ImagePreviewContextMenu_RenameImageItem_Text;
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                if (m_thumbnailGroupTable.Rename(m_thumbnailPreview.Group, m_thumbnailPreview.Index, dialog.FileName))
+                m_thumbnailGroupTable.Rename(m_thumbnailPanel.Group, m_thumbnailPanel.Index, dialog.FileName);
+                /*if (m_thumbnailGroupTable.Rename(m_thumbnailPanel.Group, m_thumbnailPanel.Index, dialog.FileName))
                 {
                     m_thumbnailPreview.SetThumbnail(m_thumbnailPreview.Group, m_thumbnailPreview.Index);
-                }
+                }*/
             }
         }
 
@@ -169,7 +149,7 @@ namespace AntiDupl.NET
         private void OnRenameImageDialogFileOk(object sender, CancelEventArgs e)
         {
             SaveFileDialog dialog = (SaveFileDialog)sender;
-            FileInfo oldFileInfo = new FileInfo(m_thumbnailPreview.ImageInfo.path);
+            FileInfo oldFileInfo = new FileInfo(m_thumbnailPanel.ImageInfo.path);
             FileInfo newFileInfo = new FileInfo(dialog.FileName);
             if (newFileInfo.FullName != oldFileInfo.FullName && newFileInfo.Exists)
             {
@@ -186,37 +166,31 @@ namespace AntiDupl.NET
 
         private void DeleteImage(object sender, EventArgs e)
         {
-            //if (MessageBox.Show("Удалить?",
-            //        "Dialog", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            //{
-                if (m_thumbnailGroupTable.Delete(m_thumbnailPreview.Group, m_thumbnailPreview.Index))
-                {
-                    m_thumbnailPreview.SetThumbnail(m_thumbnailPreview.Group, m_thumbnailPreview.Index);
-                    m_thumbnailGroupTable.ChangeCurrentThumbnail(m_thumbnailPreview.Group, m_thumbnailPreview.Index);
-                    m_thumbnailGroupTable.SelectedResultsChanged();
-                }
-            //}
-        }
-
-        private void SelectAllButThis(object sender, EventArgs e)
-        {
-            m_core.SetSelection(m_thumbnailPreview.Group.id, m_thumbnailPreview.Index, CoreDll.SelectionType.SelectAllButThis);
-            //m_thumbnailGroupPanel.Table.ChangeCurrentThumbnail(m_group, m_index);
-            //m_thumbnailGroupTable.SelectedResultsChanged();
-            m_thumbnailGroupTable.UpdateGroup(m_thumbnailPreview.Group.id);
+            /*if (m_thumbnailGroupTable.Delete(m_thumbnailPanel.Group, m_thumbnailPanel.Index))
+            {
+                m_thumbnailPreview.SetThumbnail(m_thumbnailPreview.Group, m_thumbnailPreview.Index);
+            }*/
+            m_thumbnailGroupTable.Delete(m_thumbnailPanel.Group, m_thumbnailPanel.Index);
+            m_thumbnailGroupTable.ChangeCurrentThumbnail(m_thumbnailPanel.Group, m_thumbnailPanel.Index);
+            m_thumbnailGroupTable.SelectedResultsChanged();
         }
 
         private void MakeSelect(object sender, EventArgs e)
         {
-            if (m_thumbnailGroupTable.GroupNotNull(m_thumbnailPreview.Group.id))
+            if (m_thumbnailGroupTable.GroupNotNull(m_thumbnailPanel.Group.id))
             {
                 ToolStripMenuItem item = sender as ToolStripMenuItem;
                 CoreDll.SelectionType selection = (CoreDll.SelectionType)item.Tag;
-                m_core.SetSelection(m_thumbnailPreview.Group.id, m_thumbnailPreview.Index, selection);
-                m_thumbnailGroupTable.UpdateGroup(m_thumbnailPreview.Group.id);
-                //m_thumbnailGroupTable.ChangeCurrentThumbnail(m_thumbnailPreview.Group, m_thumbnailPreview.Index);
+                m_core.SetSelection(m_thumbnailPanel.Group.id, m_thumbnailPanel.Index, selection);
+                m_thumbnailGroupTable.UpdateGroup(m_thumbnailPanel.Group.id);
                 m_thumbnailGroupTable.SelectedResultsChanged();
             }
+        }
+
+        private void UnselectAll(object sender, EventArgs e)
+        {
+            m_thumbnailGroupTable.UnselectAll();
+            m_thumbnailGroupTable.SelectedResultsChanged();
         }
     }
 }

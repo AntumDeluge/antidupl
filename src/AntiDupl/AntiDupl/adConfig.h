@@ -112,7 +112,6 @@ namespace ad
 
 	const size_t BLOCKINESS_SIZE = 8;
 	const static size_t HISTOGRAM_SIZE = 256;
-
     //-------------------------------------------------------------------------
 }
 

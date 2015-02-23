@@ -32,6 +32,8 @@
 #include "adUndoRedoTypes.h"
 #include "adUndoRedoEngine.h"
 
+//#include "adImageGroup.h"
+
 namespace ad
 {
     TUndoRedoEngine::TUndoRedoEngine(TEngine *pEngine, TImageInfoStorage *pImageInfoStorage)
@@ -54,7 +56,7 @@ namespace ad
         delete m_pCurrent;
     }
 
-	//public Выполняем определнный тип действий с текщим или выделенными результатами.
+	//public Выполняем определнный тип действий с текщим или выделенными парами изображений.
     bool TUndoRedoEngine::ApplyTo(adLocalActionType localActionType, adTargetType targetType)
     {
         bool onceMaked = false;
@@ -70,7 +72,7 @@ namespace ad
                 onceMaked = ApplyTo(localActionType, m_pCurrent->results[m_pCurrent->currentIndex]);
             }
         }
-        else
+        else if (targetType == AD_TARGET_SELECTED)
         {
             m_pStatus->SetProgress(0, 0);
             size_t current = 0, total = 0;
@@ -90,6 +92,59 @@ namespace ad
             }
             m_pStatus->Reset();
         }
+		else if (targetType == AD_TARGET_SELECTED_IMAGES) //выбранные группы
+		{
+			m_pStatus->SetProgress(0, 0);
+			size_t current = 0; 
+			size_t total = 0;
+			// подсчитываем сколько придется работать, для прогресса
+			for(TMap::const_iterator groupIt = m_pCurrent->groups.m_map.begin(); groupIt != m_pCurrent->groups.m_map.end(); ++groupIt)
+			{
+				TImageGroupPtr pImageGroup = groupIt->second;
+				for(TImageInfoPtrVector::iterator it = pImageGroup->images.begin(); it != pImageGroup->images.end(); ++it)
+				{
+					if ((*it)->selected)
+						total++;
+				}
+			}
+			for(TMap::const_iterator groupIt = m_pCurrent->groups.m_map.begin(); groupIt != m_pCurrent->groups.m_map.end(); ++groupIt)
+			{
+				TImageGroupPtr pImageGroup = groupIt->second;
+				for(TImageInfoPtrVector::iterator it = pImageGroup->images.begin(); it != pImageGroup->images.end(); )
+				{
+					TImageInfoPtr pImage = *it;
+					if (pImage->selected)
+					{
+						m_pStatus->SetProgress(current, total);
+						switch(localActionType)
+						{
+						case AD_LOCAL_ACTION_DELETE_SELECTED:
+							if (Delete(pImage))
+							{
+								onceMaked = true;
+								it = pImageGroup->images.erase(it);
+							}
+							else
+								++it;
+							break;
+						case AD_LOCAL_ACTION_MISTAKE:
+							m_pMistakeStorage->Add(pImage);
+							m_pCurrent->change->mistakenImages.push_back(pImage);
+							it = pImageGroup->images.erase(it); //удаление само передвинуло указатель
+							onceMaked = true;
+							break;
+						}
+						current++;
+					}
+					else
+						++it; // идем дальше
+				}
+				// если группу надо удалить
+				//if (pImageGroup->type == AD_RESULT_DUPL_IMAGE_PAIR && pImageGroup->images.size() == 1)
+				//	m_pCurrent->groups.m_map.erase(pImageGroup);
+			}
+			m_pStatus->Reset();
+		}
 
 		// Если ничего сделано не было.
         if(!onceMaked)
@@ -101,13 +156,17 @@ namespace ad
 
         m_pUndoDeque->push_back(m_pCurrent->Clone());
 
+		if (targetType == AD_TARGET_SELECTED_IMAGES) 
+			m_pCurrent->groups.DeleteGroupWithOneImage();
+
 		// Удаляем из списка ошибочные или удаленные
         if(localActionType == AD_LOCAL_ACTION_MISTAKE)
             m_pCurrent->RemoveMistaken(m_pStatus, m_pMistakeStorage);
         else
             m_pCurrent->RemoveDeleted(m_pStatus);
 
-        m_pCurrent->UpdateGroups();
+		if (targetType != AD_TARGET_SELECTED_IMAGES)
+			m_pCurrent->UpdateGroups();
         m_pCurrent->UpdateHints(m_pOptions, false);
 
         m_pCurrent->change = NULL;
@@ -347,6 +406,7 @@ namespace ad
                 m_pStatus->AddDuplImagePair(1);
         }
 
+		// Удаляем из хранилиша ошибочных текущие ошибочные элементы.
         TResultPtrList & mistakenResults = m_pCurrent->change->mistakenResults;
         for(TResultPtrList::iterator it = mistakenResults.begin(); it != mistakenResults.end(); ++it)
         {
@@ -355,6 +415,12 @@ namespace ad
                 m_pMistakeStorage->Erase(pResult->first);
             else if(pResult->type == AD_RESULT_DUPL_IMAGE_PAIR)
                 m_pMistakeStorage->Erase(pResult->first, pResult->second);
+        }
+		TImageInfoPtrList & mistakenImages = m_pCurrent->change->mistakenImages;
+        for(TImageInfoPtrList::iterator it = mistakenImages.begin(); it != mistakenImages.end(); ++it)
+        {
+            TImageInfo *pImage = *it;
+            m_pMistakeStorage->Erase(pImage);
         }
 
         m_pStatus->Reset();
@@ -399,6 +465,7 @@ namespace ad
                 m_pStatus->AddDuplImagePair(-1);
         }
 
+		// Добавляем в хранилише ошибочных текущие ошибочные элементы.
         TResultPtrList & mistakenResults = m_pCurrent->change->mistakenResults;
         for(TResultPtrList::iterator it = mistakenResults.begin(); it != mistakenResults.end(); ++it)
         {
@@ -407,6 +474,12 @@ namespace ad
                 m_pMistakeStorage->Add(pResult->first);
             else if(pResult->type == AD_RESULT_DUPL_IMAGE_PAIR)
                 m_pMistakeStorage->Add(pResult->first, pResult->second);
+        }
+		TImageInfoPtrList & mistakenImages = m_pCurrent->change->mistakenImages;
+        for(TImageInfoPtrList::iterator it = mistakenImages.begin(); it != mistakenImages.end(); ++it)
+        {
+            TImageInfo *pImage = *it;
+            m_pMistakeStorage->Add(pImage);
         }
 
         m_pStatus->Reset();
@@ -464,7 +537,7 @@ namespace ad
         m_pStatus->Reset();
     }
 
-	//private
+	//private Применение действия для пары или пар изображений.
     bool TUndoRedoEngine::ApplyTo(adLocalActionType localActionType, TResult *pResult)
     {
         if(pResult->type == AD_RESULT_DEFECT_IMAGE)
@@ -566,6 +639,56 @@ namespace ad
         return false; 
     }
 
+	//public Удаляет файл с заданной группой и индексом.
+    bool TUndoRedoEngine::Delete(adSize groupId, adSize index)
+    {
+		bool isDeleting = false;
+
+		// Сохраняем сотояние
+        TUndoRedoChange *pOldChange = m_pCurrent->change;
+        m_pCurrent->change = new TUndoRedoChange();
+
+        TImageGroupPtr pImageGroup = m_pCurrent->groups.Get(groupId, false);
+        if(pImageGroup && index < pImageGroup->images.size())
+        {
+            TImageInfoPtr pImageInfo = pImageGroup->images[index];
+            
+			if (Delete(pImageInfo))
+			{
+				isDeleting = true;
+				pImageGroup->images.erase(pImageGroup->images.begin() + index);
+			}
+        }
+
+		// Если ничего сделано не было.
+        if(!isDeleting)
+        {
+            delete m_pCurrent->change;
+            m_pCurrent->change = pOldChange;
+            return false;
+        }
+
+		// Отмечаем новое состояние в очереди действий
+        m_pUndoDeque->push_back(m_pCurrent->Clone());
+
+		m_pCurrent->groups.DeleteGroupWithOneImage();
+		m_pCurrent->RemoveDeleted(m_pStatus);
+
+        //m_pCurrent->UpdateGroups();
+        //m_pCurrent->UpdateHints(m_pOptions, false);
+
+        m_pCurrent->change = NULL;
+
+        if(pOldChange)
+            delete pOldChange;
+
+		// Очишаем точки возврата в будушее.
+        ClearRedo();
+        AdjustUndoDequeSize(m_pOptions->advanced.undoQueueSize);
+
+        return true;
+    }
+
 	//public Переносим файлы из текущей группы в заданную директорию.
 	bool TUndoRedoEngine::MoveCurrentGroup(const TString & directory)
     {
@@ -586,17 +709,16 @@ namespace ad
 		// Проходимся по списку изображений в группе.
 		for (size_t i = 0; i < pImageGroup->images.size(); i++)
 		{
-			TPath * path = &pImageGroup->images[i]->path;
-			if (path->GetDirectory() != directory)
+			if (pImageGroup->images[i]->path.GetDirectory() != directory)
 			{
-				TString target = CreatePath(directory, path->GetName());
+				TString target = CreatePath(directory, pImageGroup->images[i]->path.GetName());
 				if (IsFileExists(target.c_str()))
 					target = GetSimilarPath(TPath(target));
 
 				//if (Rename(pImageGroup->images[i], target))
-				if(::MoveFileEx(path->Original().c_str(), target.c_str(), MOVEFILE_COPY_ALLOWED) != FALSE)
+				if(::MoveFileEx(pImageGroup->images[i]->path.Original().c_str(), target.c_str(), MOVEFILE_COPY_ALLOWED) != FALSE)
 				{
-					m_pCurrent->change->renamedImages.push_back(TRename(pImageGroup->images[i], path->Original(), target));
+					m_pCurrent->change->renamedImages.push_back(TRename(pImageGroup->images[i], pImageGroup->images[i]->path.Original(), target));
 					m_pStatus->RenameImage(1);
 					m_pMistakeStorage->Rename(pImageGroup->images[i], target);
 					pImageGroup->images[i]->Rename(target);
@@ -649,15 +771,15 @@ namespace ad
 
 		for (size_t i = 0; i < pImageGroup->images.size(); i++)
 		{
-			TPath* path = &pImageGroup->images[i]->path;
-			if (path->GetName(false) != fileName)
+			if (pImageGroup->images[i]->path.GetName(false) != fileName)
 			{
-				TString target = CreatePath(path->GetDirectory(), fileName + path->GetExtension());
+				TString target = CreatePath(pImageGroup->images[i]->path.GetDirectory(), fileName + pImageGroup->images[i]->path.GetExtension());
 				if (IsFileExists(target.c_str()))
-					target = GetSimilarPath(TPath(target), *path); //разименовываем указатель
-				if(::MoveFileEx(path->Original().c_str(), target.c_str(), MOVEFILE_COPY_ALLOWED) != FALSE)
+					target = GetSimilarPath(TPath(target));
+				//if (Rename(pImageGroup->images[i], target))
+				if(::MoveFileEx(pImageGroup->images[i]->path.Original().c_str(), target.c_str(), MOVEFILE_COPY_ALLOWED) != FALSE)
 				{
-					m_pCurrent->change->renamedImages.push_back(TRename(pImageGroup->images[i], path->Original(), target));
+					m_pCurrent->change->renamedImages.push_back(TRename(pImageGroup->images[i], pImageGroup->images[i]->path.Original(), target));
 					m_pStatus->RenameImage(1);
 					m_pMistakeStorage->Rename(pImageGroup->images[i], target);
 					pImageGroup->images[i]->Rename(target);

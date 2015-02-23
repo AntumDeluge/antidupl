@@ -196,6 +196,14 @@ namespace AntiDupl.NET
             return enable[0] != CoreDll.FALSE; 
         }
 
+        public bool CanApply(CoreDll.ActionEnableType actionEnableType, CoreDll.ViewType viewType)
+        {
+            int[] enable = new int[1];
+            if (m_dll.adCanApplyView(m_handle, actionEnableType, viewType, Marshal.UnsafeAddrOfPinnedArrayElement(enable, 0)) != CoreDll.Error.Ok)
+                return false;
+            return enable[0] != CoreDll.FALSE;
+        }
+
         public bool RenameCurrent(CoreDll.RenameCurrentType renameCurrentType, string newFileName)
         {
             return m_dll.adRenameCurrentW(m_handle, renameCurrentType, newFileName) == CoreDll.Error.Ok;
@@ -434,9 +442,24 @@ namespace AntiDupl.NET
             return null;
         }
 
+        /// <summary>
+        /// Переименование файла из переданной группы.
+        /// </summary>
+        /// <param name="groupId">Группа.</param>
+        /// <param name="index">Номер в группе.</param>
+        /// <param name="newFileName">Новое имя файла для переименования.</param>
+        /// <returns>Испешно или нет</returns>
         public bool Rename(int groupId, int index, string newFileName)
         {
             return m_dll.adImageInfoRenameW(m_handle, new IntPtr(groupId), new IntPtr(index), newFileName) == CoreDll.Error.Ok;
+        }
+
+        public bool Delete(int groupId, int index)
+        {
+            return m_dll.adImageInfoDeleteW(m_handle, new IntPtr(groupId), new IntPtr(index)) == CoreDll.Error.Ok;
+            //m_dll.SetSelection(groupId, 0, CoreDll.SelectionType.SelectCurrent);
+            //m_dll.adImageInfoSelectionSet(m_handle, new IntPtr(groupId), new IntPtr(index), CoreDll.SelectionType.SelectCurrent);
+            //return m_dll.adResultApplyTo(m_handle, CoreDll.LocalActionType.DeleteSelected, CoreDll.TargetType.SelectedImages) == CoreDll.Error.Ok;
         }
 
         public System.Drawing.Bitmap LoadBitmap(int width, int height, string path)

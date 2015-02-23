@@ -39,6 +39,7 @@ namespace ad
 	typedef std::list<TResultPtr> TResultPtrList;
 
 	typedef TImageInfo * TImageInfoPtr;
+
 	typedef std::vector<TImageInfoPtr> TImageInfoPtrVector;
 	// Контейнер указателей на информацию об изображение.
 	typedef std::set<TImageInfoPtr> TImageInfoPtrSet;
@@ -47,10 +48,12 @@ namespace ad
 	{
 		TSize id;
 
-		// Список изображений входящих в группу.
+		TResultType type; //дубликат или дефекты
+
+		// Список указателей на изображения входящих в группу.
 		TImageInfoPtrVector images;
-		// Список результатов
-		TResultPtrList results;
+		// Список указателей на результаты
+		TResultPtrList results;  //TResult содержит в себе TImageInfoPtr
 
 		bool invalidHint;
 
@@ -58,6 +61,7 @@ namespace ad
 		TImageGroup(const TImageGroup & imageGroup);
 
 		void UpdateImages();
+		//void UpdateResults();
 
 		bool Export(adGroupPtr pGroup) const;
 	};
@@ -83,16 +87,26 @@ namespace ad
 		adError SetSelection(adSize groupId, adSize index, adSelectionType selectionType);
 		adError GetSelection(adSize groupId, adSizePtr pStartFrom, adBoolPtr pSelection, adSizePtr pSelectionSize) const;
 
+		void Export(TResultPtrVector & results) const;
+		bool CanApply(adActionEnableType actionEnableType) const;
+		bool ApplyTo(adLocalActionType localActionType);
+		void DeleteGroupWithOneImage();
+
+		// Хранилище групп в виде структур в карте. (ID, Группа)
+		typedef std::map<size_t, TImageGroupPtr> TMap;
+		TMap m_map;
+
+
 	private:
 		void Erase(size_t id);
 		void Clear();
 		void UpdateVector();
 
-		typedef std::map<size_t, TImageGroupPtr> TMap;
+		//typedef std::map<size_t, TImageGroupPtr> TMap;
 		typedef std::vector<TImageGroupPtr> TVector;
 		
 		// Хранилище групп в виде структур в карте. (ID, Группа)
-		TMap m_map;
+		//TMap m_map;
 		// Хранилище групп в виде структур в векторе.
 		TVector m_vector;
 	};

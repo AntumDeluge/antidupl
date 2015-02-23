@@ -56,12 +56,13 @@ namespace ad
         TResultPtrList removedResults;
         TResultPtrList mistakenResults;
         TImageInfoPtrList deletedImages;
+		TImageInfoPtrList mistakenImages;
         TRenameList renamedImages;
     };
     //-------------------------------------------------------------------------
     struct TUndoRedoStage
     {
-        TResultPtrVector results;
+        TResultPtrVector results; //результаты и группы синхронизируются через
         TImageGroupStorage groups;
         size_t currentIndex;
         TUndoRedoChange *change;
@@ -79,6 +80,8 @@ namespace ad
 
         adError SetSelection(adSizePtr pStartFrom, adSize size, adBool value);
         adError GetSelection(adSizePtr pStartFrom, adBoolPtr pSelection, adSizePtr pSelectionSize);
+
+		adError SetSelection(adSize groupId, adSize index, adSelectionType selectionType, TStatus *pStatus);
 
         adError Export(adSizePtr pStartFrom, adResultPtrA pResult, adSizePtr pResultSize) const;
         adError Export(adSizePtr pStartFrom, adResultPtrW pResult, adSizePtr pResultSize) const;

@@ -28,7 +28,7 @@
 
 namespace ad
 {
-	// Структура хранит пары дубликатов
+	// Структура хранит пары дубликатов. Предназначенна именно для пар.
     struct TResult
     {
         size_t id;
@@ -37,7 +37,8 @@ namespace ad
 
         TResultType type;
         TImageInfoPtr first;
-        TImageInfoPtr second;
+		//Используется только в режиме работы с парами
+        TImageInfoPtr second; 
         TDefectType defect;
         double difference;
         TTransformType transform;

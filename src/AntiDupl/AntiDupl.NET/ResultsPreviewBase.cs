@@ -37,14 +37,35 @@ namespace AntiDupl.NET
         protected CoreOptions m_coreOptions;
         protected CoreResult m_currentSearchResult;
 
+        /// <summary>
+        /// Панель в виде сетки слжержит в себе панели с кнопками и изображением.
+        /// </summary>
         protected TableLayoutPanel m_mainLayout;
+        /// <summary>
+        /// Панель с изображением.
+        /// </summary>
         protected TableLayoutPanel m_imageLayout;
+        /// <summary>
+        /// Панель с кнопками.
+        /// </summary>
         protected TableLayoutPanel m_buttonLayout;
 
+        /// <summary>
+        /// Панель инструментов.
+        /// </summary>
         protected ToolStripPanel m_toolStripPanel;
+        /// <summary>
+        /// Инструменты.
+        /// </summary>
         protected ToolStrip m_toolStrip;
 
+        /// <summary>
+        /// Кнопка следующая на панели инструментов.
+        /// </summary>
         protected ToolStripButton m_nextButton;
+        /// <summary>
+        /// Кнопка предыдушая на панели инструментов.
+        /// </summary>
         protected ToolStripButton m_previousButton;
 
         public ResultsPreviewBase(CoreLib core, Options options, CoreOptions coreOptions, ResultsListView resultsListView)

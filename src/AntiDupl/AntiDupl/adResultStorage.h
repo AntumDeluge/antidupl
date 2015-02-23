@@ -52,7 +52,7 @@ namespace ad
         ~TResultStorage();
 
         bool AddDuplImagePair(const TImageInfoPtr first, const TImageInfoPtr second, 
-            double difference, TTransformType transform);
+							  double difference, TTransformType transform);
         bool AddDefectImage(const TImageInfoPtr info, TDefectType defect);
 
         void Clear();
@@ -73,6 +73,7 @@ namespace ad
 		adError RenameCurrentGroupAs(const TString& fileName);
 
         bool CanApply(adActionEnableType actionEnableType) const;
+		bool CanApply(adActionEnableType actionEnableType, adViewType viewType) const;
 
         adError SetCurrent(adSize currentIndex);
         adError GetCurrent(adSizePtr pCurrentIndex);
@@ -91,6 +92,7 @@ namespace ad
 		adError GetSelection(adSize groupId, adSizePtr pStartFrom, adBoolPtr pSelection, adSizePtr pSelectionSize) const;
 		
         adError Rename(adSize groupId, adSize index, const TString& newFileName);
+		adError Delete(adSize groupId, adSize index);
 
         adError Load(const TChar* fileName, bool check);
         adError Save(const TChar* fileName) const;

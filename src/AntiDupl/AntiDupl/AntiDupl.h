@@ -240,6 +240,7 @@ extern "C"
         AD_LOCAL_ACTION_MOVE_AND_RENAME_SECOND_TO_FIRST = 11,
         AD_LOCAL_ACTION_PERFORM_HINT = 12,
         AD_LOCAL_ACTION_MISTAKE = 13,
+		AD_LOCAL_ACTION_DELETE_SELECTED = 14,
         AD_LOCAL_ACTION_SIZE
     };
 
@@ -254,10 +255,18 @@ extern "C"
         AD_ACTION_ENABLE_SIZE
     };
 
+	enum adViewType : adInt32
+    {
+        AD_VIEW_TYPE_DUPL_PAIR = 0,
+        AD_VIEW_TYPE_GROUPED_THUMBNAILS = 1,
+		AD_VIEW_TYPE_SIZE
+    };
+
     enum adTargetType : adInt32
     {
         AD_TARGET_CURRENT = 0,
         AD_TARGET_SELECTED = 1,
+		AD_TARGET_SELECTED_IMAGES = 2,
         AD_TARGET_SIZE
     };
 
@@ -563,6 +572,7 @@ extern "C"
 	{
 		adSize id;
 		adSize size;
+		adResultType type;
 	};
 	typedef adGroup* adGroupPtr;
 
@@ -612,6 +622,7 @@ extern "C"
     DLLAPI adError adResultApply(adHandle handle, adGlobalActionType globalActionType);
     DLLAPI adError adResultApplyTo(adHandle handle, adLocalActionType localActionType, adTargetType targetType);
     DLLAPI adError adCanApply(adHandle handle, adActionEnableType actionEnableType, adBoolPtr pEnable);
+	DLLAPI adError adCanApplyView(adHandle handle, adActionEnableType actionEnableType, adViewType viewType, adBoolPtr pEnable);
 
     DLLAPI adError adRenameCurrentA(adHandle handle, adRenameCurrentType renameCurrentType, const adCharA* newFileName);
     DLLAPI adError adRenameCurrentW(adHandle handle, adRenameCurrentType renameCurrentType, const adCharW* newFileName);
@@ -630,6 +641,7 @@ extern "C"
 	DLLAPI adError adImageInfoSelectionGet(adHandle handle, adSize groupId, adSizePtr pStartFrom, adBoolPtr pSelection, adSizePtr pSelectionSize);
 	DLLAPI adError adImageInfoRenameA(adHandle handle, adSize groupId, adSize index, const adCharA* newFileName);
 	DLLAPI adError adImageInfoRenameW(adHandle handle, adSize groupId, adSize index, const adCharW* newFileName);
+	DLLAPI adError adImageInfoDeleteW(adHandle handle, adSize groupId, adSize index);
 
     DLLAPI adError adLoadBitmapA(adHandle handle, const adCharA* fileName, adBitmapPtr pBitmap);
     DLLAPI adError adLoadBitmapW(adHandle handle, const adCharW* fileName, adBitmapPtr pBitmap);
