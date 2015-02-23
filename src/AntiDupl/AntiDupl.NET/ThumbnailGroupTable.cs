@@ -109,6 +109,7 @@ namespace AntiDupl.NET
             int groupSizeMax = 0;
             for (int i = 0; i < m_groups.Length; ++i)
             {
+                System.Diagnostics.Debug.Assert(m_groups[i].images.Length > 0);
                 if (m_groups[i].images.Length > groupSizeMax)
                 {
                     groupSizeMax = m_groups[i].images.Length;

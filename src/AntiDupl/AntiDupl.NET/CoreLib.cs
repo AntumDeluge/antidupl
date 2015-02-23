@@ -367,6 +367,8 @@ namespace AntiDupl.NET
         public CoreImageInfo[] GetImageInfo(int groupId, uint startFrom, uint size)
         {
             uint imageInfoSize = GetImageInfoSize(groupId);
+            if (imageInfoSize == 0)
+                throw new Exception("imageInfoSize = 0");
             if (imageInfoSize > startFrom)
             {
                 object imageInfoObject = new CoreDll.adImageInfoW();

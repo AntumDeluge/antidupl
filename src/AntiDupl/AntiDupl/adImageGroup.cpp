@@ -366,6 +366,9 @@ namespace ad
 			return AD_ERROR_INVALID_GROUP_ID;
 
 		const TImageInfoPtrVector & images = pImageGroup->images;
+		//assert(images.size() != 0);
+		if (images.size() == 0)
+			throw "images.size() == 0";
 		if(images.size() < *pStartFrom)
 		{
 			*pStartFrom = images.size();

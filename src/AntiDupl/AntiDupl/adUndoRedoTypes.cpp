@@ -185,6 +185,7 @@ namespace ad
     {
         if(pResult == NULL || pResultSize == NULL || pStartFrom == NULL)
             return AD_ERROR_INVALID_POINTER;
+
         if(results.size() < *pStartFrom)
         {
             *pStartFrom = results.size();

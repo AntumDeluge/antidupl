@@ -50,6 +50,7 @@ namespace AntiDupl.NET
         {
             id = group.id.ToInt32();
             images = core.GetImageInfo(id, 0, (uint)group.size);
+            //System.Diagnostics.Debug.Assert(images != null);
             type = group.type;
 
             imageTypeDiffrent = false;

@@ -143,6 +143,7 @@ namespace ad
 				//if (pImageGroup->type == AD_RESULT_DUPL_IMAGE_PAIR && pImageGroup->images.size() == 1)
 				//	m_pCurrent->groups.m_map.erase(pImageGroup);
 			}
+			m_pCurrent->groups.DeleteGroupWithOneImage();
 			m_pStatus->Reset();
 		}
 
@@ -155,9 +156,6 @@ namespace ad
         }
 
         m_pUndoDeque->push_back(m_pCurrent->Clone());
-
-		if (targetType == AD_TARGET_SELECTED_IMAGES) 
-			m_pCurrent->groups.DeleteGroupWithOneImage();
 
 		// Удаляем из списка ошибочные или удаленные
         if(localActionType == AD_LOCAL_ACTION_MISTAKE)
@@ -668,10 +666,11 @@ namespace ad
             return false;
         }
 
+		m_pCurrent->groups.DeleteGroupWithOneImage();
+
 		// Отмечаем новое состояние в очереди действий
         m_pUndoDeque->push_back(m_pCurrent->Clone());
 
-		m_pCurrent->groups.DeleteGroupWithOneImage();
 		m_pCurrent->RemoveDeleted(m_pStatus);
 
         //m_pCurrent->UpdateGroups();
