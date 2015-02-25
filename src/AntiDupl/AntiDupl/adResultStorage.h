@@ -93,6 +93,7 @@ namespace ad
 		
         adError Rename(adSize groupId, adSize index, const TString& newFileName);
 		adError Delete(adSize groupId, adSize index);
+		adError MoveSelectedImageTo(const TString & directory);
 
         adError Load(const TChar* fileName, bool check);
         adError Save(const TChar* fileName) const;

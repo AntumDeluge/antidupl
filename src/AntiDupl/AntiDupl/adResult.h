@@ -42,7 +42,7 @@ namespace ad
         TDefectType defect;
         double difference;
         TTransformType transform;
-        TSize group;
+        TSize group; //group Id
         THintType hint;
 
         TResult();

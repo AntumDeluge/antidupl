@@ -642,6 +642,7 @@ extern "C"
 	DLLAPI adError adImageInfoRenameA(adHandle handle, adSize groupId, adSize index, const adCharA* newFileName);
 	DLLAPI adError adImageInfoRenameW(adHandle handle, adSize groupId, adSize index, const adCharW* newFileName);
 	DLLAPI adError adImageInfoDeleteW(adHandle handle, adSize groupId, adSize index);
+	DLLAPI adError adMoveSelectedImageToW(adHandle handle, const adCharW* directory);
 
     DLLAPI adError adLoadBitmapA(adHandle handle, const adCharA* fileName, adBitmapPtr pBitmap);
     DLLAPI adError adLoadBitmapW(adHandle handle, const adCharW* fileName, adBitmapPtr pBitmap);

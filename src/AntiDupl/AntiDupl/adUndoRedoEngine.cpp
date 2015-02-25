@@ -127,9 +127,34 @@ namespace ad
 							else
 								++it;
 							break;
+						/*case AD_LOCAL_ACTION_MOVETO_SELECTED:
+							++it;
+							break;*/
 						case AD_LOCAL_ACTION_MISTAKE:
-							m_pMistakeStorage->Add(pImage);
-							m_pCurrent->change->mistakenImages.push_back(pImage);
+							if(pImageGroup->type == AD_RESULT_DEFECT_IMAGE)
+							{
+								m_pMistakeStorage->Add(pImage);
+								m_pCurrent->change->mistakenImages.push_back(pImage);
+							}
+							else if (pImageGroup->type == AD_RESULT_DUPL_IMAGE_PAIR)
+							{
+								// для каждого результата в этой группе и этим изображением заносим в дефекты
+								//for(size_t i = 0; i < results.size(); ++i)
+								//	pUndoRedoStage->results[i] = new TResult(*results[i]);
+								for(TResultPtrVector::iterator it = m_pCurrent->results.begin(); it != m_pCurrent->results.end() && !m_pStatus->Stopped(); it++)
+								{
+									if((*it)->group == pImageGroup->id &&
+										((*it)->first == pImage || (*it)->second == pImage))
+									{
+										//it = m_pCurrent->results.erase(it);
+										m_pMistakeStorage->Add((*it)->first, (*it)->second);
+										m_pCurrent->change->mistakenResults.push_back(*it);
+										//it++;
+									}
+									/*else
+										it++;*/
+								}
+							}
 							it = pImageGroup->images.erase(it); //удаление само передвинуло указатель
 							onceMaked = true;
 							break;
@@ -164,7 +189,7 @@ namespace ad
             m_pCurrent->RemoveDeleted(m_pStatus);
 
 		if (targetType != AD_TARGET_SELECTED_IMAGES)
-			m_pCurrent->UpdateGroups();
+			m_pCurrent->UpdateGroups();  //UpdateGroups from result
         m_pCurrent->UpdateHints(m_pOptions, false);
 
         m_pCurrent->change = NULL;
@@ -177,6 +202,88 @@ namespace ad
 
         return true;
     }
+
+	//private Применение действия для пары или пар изображений.
+    bool TUndoRedoEngine::ApplyTo(adLocalActionType localActionType, TResult *pResult)
+    {
+        if(pResult->type == AD_RESULT_DEFECT_IMAGE)
+        {
+            switch(localActionType)
+            {
+            case AD_LOCAL_ACTION_DELETE_DEFECT:
+                return Delete(pResult->first);
+            case AD_LOCAL_ACTION_PERFORM_HINT:
+                if(pResult->hint == AD_HINT_DELETE_FIRST)
+                    return Delete(pResult->first);
+            case AD_LOCAL_ACTION_MISTAKE:
+                m_pMistakeStorage->Add(pResult->first);
+                m_pCurrent->change->mistakenResults.push_back(pResult);
+                return true;
+            }
+        }
+        else if(pResult->type == AD_RESULT_DUPL_IMAGE_PAIR)
+        {
+            switch(localActionType)
+            {
+            case AD_LOCAL_ACTION_DELETE_FIRST:
+                return Delete(pResult->first);
+            case AD_LOCAL_ACTION_DELETE_SECOND:
+                return Delete(pResult->second);
+            case AD_LOCAL_ACTION_DELETE_BOTH:
+                return (Delete(pResult->first) || Delete(pResult->second));
+            case AD_LOCAL_ACTION_RENAME_FIRST_TO_SECOND:
+                return Rename(pResult->first, pResult->second);
+            case AD_LOCAL_ACTION_RENAME_SECOND_TO_FIRST:
+                return Rename(pResult->second, pResult->first);
+			case AD_LOCAL_ACTION_RENAME_FIRST_LIKE_SECOND:
+                return RenameLike(pResult->first, pResult->second);
+			case AD_LOCAL_ACTION_RENAME_SECOND_LIKE_FIRST:
+				return RenameLike(pResult->second, pResult->first);
+			case AD_LOCAL_ACTION_MOVE_FIRST_TO_SECOND:
+				return Move(pResult->first, pResult->second);
+			case AD_LOCAL_ACTION_MOVE_SECOND_TO_FIRST:
+				return Move(pResult->second, pResult->first);
+			case AD_LOCAL_ACTION_MOVE_AND_RENAME_FIRST_TO_SECOND:
+				return MoveAndRenameLike(pResult->first, pResult->second);
+			case AD_LOCAL_ACTION_MOVE_AND_RENAME_SECOND_TO_FIRST:
+				return MoveAndRenameLike(pResult->second, pResult->first);
+            case AD_LOCAL_ACTION_PERFORM_HINT:
+                switch(pResult->hint)
+                {
+                case AD_HINT_DELETE_FIRST:
+                    return Delete(pResult->first);
+                case AD_HINT_DELETE_SECOND:
+                    return Delete(pResult->second);
+                case AD_HINT_RENAME_FIRST_TO_SECOND:
+                    return Rename(pResult->first, pResult->second);
+                case AD_HINT_RENAME_SECOND_TO_FIRST:
+                    return Rename(pResult->second, pResult->first);
+                }
+                break;
+            case AD_LOCAL_ACTION_MISTAKE:
+                m_pMistakeStorage->Add(pResult->first, pResult->second);
+                m_pCurrent->change->mistakenResults.push_back(pResult);
+                return true;
+            }
+        }
+        return false;
+    }
+
+	//private Удаляет изображение
+    bool TUndoRedoEngine::Delete(TImageInfo *pImageInfo)
+    {
+        const TChar *fileName = pImageInfo->path.Original().c_str();
+        if(pImageInfo->removed || !IsFileExists(fileName))
+            return true;
+
+        if(m_pRecycleBin->Delete(pImageInfo))
+        {
+            m_pCurrent->change->deletedImages.push_back(pImageInfo);
+            return true;
+        }
+        return false;
+    }
+
     
 	// private Переименовывает/перемещает файл с заменой
     bool TUndoRedoEngine::Rename(TImageInfo *pImageInfo, const TString & newFileName)
@@ -331,6 +438,90 @@ namespace ad
             return true;
         }
         return false;
+    }
+
+	//private Перемещаем файл в папку без замены
+	bool TUndoRedoEngine::MoveTo(TImageInfo *pImageInfo, const TString & directory)
+    {
+		const TChar *oldPath = pImageInfo->path.Original().c_str();
+
+		if (!IsDirectoryExists(directory.c_str()))
+            return false;
+
+		TString target = CreatePath(directory, pImageInfo->path.GetName(true));
+		if (IsFileExists(target.c_str()))
+			target = GetSimilarPath(TPath(target));
+
+		if(::MoveFileEx(oldPath, target.c_str(), MOVEFILE_COPY_ALLOWED) != FALSE)
+        {
+            m_pCurrent->change->renamedImages.push_back(TRename(pImageInfo, pImageInfo->path.Original(), target));
+            m_pStatus->RenameImage(1);
+            m_pMistakeStorage->Rename(pImageInfo, target);
+            pImageInfo->Rename(target);
+            return true;
+        }
+        return false;
+    }
+
+	//private Перемещаем выделенные файлы в папку без замены
+	bool TUndoRedoEngine::MoveSelectedImageTo(const TString & directory)
+    {
+		bool onceMaked = false;
+		size_t current = 0; 
+		size_t total = 0;
+
+		// Сохраняем сотояние
+        TUndoRedoChange *pOldChange = m_pCurrent->change;
+        m_pCurrent->change = new TUndoRedoChange();
+
+		m_pStatus->SetProgress(current, total);
+		// подсчитываем сколько придется работать, для прогресса
+		for(TMap::const_iterator groupIt = m_pCurrent->groups.m_map.begin(); groupIt != m_pCurrent->groups.m_map.end(); ++groupIt)
+		{
+			TImageGroupPtr pImageGroup = groupIt->second;
+			for(TImageInfoPtrVector::iterator it = pImageGroup->images.begin(); it != pImageGroup->images.end(); ++it)
+			{
+				if ((*it)->selected)
+					total++;
+			}
+		}
+
+		for(TMap::const_iterator groupIt = m_pCurrent->groups.m_map.begin(); groupIt != m_pCurrent->groups.m_map.end(); ++groupIt)
+		{
+			TImageGroupPtr pImageGroup = groupIt->second;
+			for(TImageInfoPtrVector::iterator it = pImageGroup->images.begin(); it != pImageGroup->images.end(); ++it)
+			{
+				TImageInfoPtr pImage = *it;
+				if (pImage->selected)
+				{
+					m_pStatus->SetProgress(current, total);
+					onceMaked = MoveTo(pImage, directory) || onceMaked;
+					current++;
+				}
+			}
+		}
+
+		// Если ничего сделано не было.
+        if(!onceMaked)
+        {
+            delete m_pCurrent->change;
+            m_pCurrent->change = pOldChange;
+            return false;
+        }
+
+        m_pUndoDeque->push_back(m_pCurrent->Clone());
+
+        m_pCurrent->UpdateHints(m_pOptions, false);
+
+        m_pCurrent->change = NULL;
+
+        if(pOldChange)
+            delete pOldChange;
+
+        ClearRedo();
+        AdjustUndoDequeSize(m_pOptions->advanced.undoQueueSize);
+
+        return true;
     }
 
 	//private Перемещаем и переименовываем файл из old в new как соседа
@@ -534,88 +725,7 @@ namespace ad
             m_pImageInfoStorage->RemoveUnlinked();
         m_pStatus->Reset();
     }
-
-	//private Применение действия для пары или пар изображений.
-    bool TUndoRedoEngine::ApplyTo(adLocalActionType localActionType, TResult *pResult)
-    {
-        if(pResult->type == AD_RESULT_DEFECT_IMAGE)
-        {
-            switch(localActionType)
-            {
-            case AD_LOCAL_ACTION_DELETE_DEFECT:
-                return Delete(pResult->first);
-            case AD_LOCAL_ACTION_PERFORM_HINT:
-                if(pResult->hint == AD_HINT_DELETE_FIRST)
-                    return Delete(pResult->first);
-            case AD_LOCAL_ACTION_MISTAKE:
-                m_pMistakeStorage->Add(pResult->first);
-                m_pCurrent->change->mistakenResults.push_back(pResult);
-                return true;
-            }
-        }
-        else if(pResult->type == AD_RESULT_DUPL_IMAGE_PAIR)
-        {
-            switch(localActionType)
-            {
-            case AD_LOCAL_ACTION_DELETE_FIRST:
-                return Delete(pResult->first);
-            case AD_LOCAL_ACTION_DELETE_SECOND:
-                return Delete(pResult->second);
-            case AD_LOCAL_ACTION_DELETE_BOTH:
-                return (Delete(pResult->first) || Delete(pResult->second));
-            case AD_LOCAL_ACTION_RENAME_FIRST_TO_SECOND:
-                return Rename(pResult->first, pResult->second);
-            case AD_LOCAL_ACTION_RENAME_SECOND_TO_FIRST:
-                return Rename(pResult->second, pResult->first);
-			case AD_LOCAL_ACTION_RENAME_FIRST_LIKE_SECOND:
-                return RenameLike(pResult->first, pResult->second);
-			case AD_LOCAL_ACTION_RENAME_SECOND_LIKE_FIRST:
-				return RenameLike(pResult->second, pResult->first);
-			case AD_LOCAL_ACTION_MOVE_FIRST_TO_SECOND:
-				return Move(pResult->first, pResult->second);
-			case AD_LOCAL_ACTION_MOVE_SECOND_TO_FIRST:
-				return Move(pResult->second, pResult->first);
-			case AD_LOCAL_ACTION_MOVE_AND_RENAME_FIRST_TO_SECOND:
-				return MoveAndRenameLike(pResult->first, pResult->second);
-			case AD_LOCAL_ACTION_MOVE_AND_RENAME_SECOND_TO_FIRST:
-				return MoveAndRenameLike(pResult->second, pResult->first);
-            case AD_LOCAL_ACTION_PERFORM_HINT:
-                switch(pResult->hint)
-                {
-                case AD_HINT_DELETE_FIRST:
-                    return Delete(pResult->first);
-                case AD_HINT_DELETE_SECOND:
-                    return Delete(pResult->second);
-                case AD_HINT_RENAME_FIRST_TO_SECOND:
-                    return Rename(pResult->first, pResult->second);
-                case AD_HINT_RENAME_SECOND_TO_FIRST:
-                    return Rename(pResult->second, pResult->first);
-                }
-                break;
-            case AD_LOCAL_ACTION_MISTAKE:
-                m_pMistakeStorage->Add(pResult->first, pResult->second);
-                m_pCurrent->change->mistakenResults.push_back(pResult);
-                return true;
-            }
-        }
-        return false;
-    }
-
-	//private Удаляет изображение
-    bool TUndoRedoEngine::Delete(TImageInfo *pImageInfo)
-    {
-        const TChar *fileName = pImageInfo->path.Original().c_str();
-        if(pImageInfo->removed || !IsFileExists(fileName))
-            return true;
-
-        if(m_pRecycleBin->Delete(pImageInfo))
-        {
-            m_pCurrent->change->deletedImages.push_back(pImageInfo);
-            return true;
-        }
-        return false;
-    }
-
+	
 	//public
     bool TUndoRedoEngine::RenameCurrent(adRenameCurrentType renameCurrentType, const TString & newFileName)
     {

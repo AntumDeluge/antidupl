@@ -52,11 +52,11 @@ namespace AntiDupl.NET
             Dock = DockStyle.Fill;
 
             m_mainSplitContainer = mainSplitContainer;
-            m_resultsPreviewDefect = new ResultsPreviewDefect(core, options, coreOptions, m_mainSplitContainer.resultsListView);
+            m_resultsPreviewDefect = new ResultsPreviewDefect(core, options, coreOptions, m_mainSplitContainer.ResultsListView);
             m_resultsPreviewDefect.Location = new System.Drawing.Point(0, 0);
             m_resultsPreviewDefect.Dock = DockStyle.Fill;
 
-            m_resultsPreviewDuplPair = new ResultsPreviewDuplPair(core, options, coreOptions, m_mainSplitContainer.resultsListView);
+            m_resultsPreviewDuplPair = new ResultsPreviewDuplPair(core, options, coreOptions, m_mainSplitContainer.ResultsListView);
             m_resultsPreviewDuplPair.Location = new System.Drawing.Point(0, 0);
             m_resultsPreviewDuplPair.Dock = DockStyle.Fill;
 
@@ -66,7 +66,7 @@ namespace AntiDupl.NET
 
         private void CurrentResultChanged()
         {
-            CoreResult result = m_mainSplitContainer.resultsListView.GetCurrentResult();
+            CoreResult result = m_mainSplitContainer.ResultsListView.GetCurrentResult();
             State state = State.Empty;
             if (result != null)
             {

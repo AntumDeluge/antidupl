@@ -107,7 +107,7 @@ namespace AntiDupl.NET
             {
                 StringBuilder builder = new StringBuilder();
                 builder.Append(m_totalText);
-                builder.Append(m_mainSplitContainer.resultsListView.GetTotalResultCount());
+                builder.Append(m_mainSplitContainer.ResultsListView.GetTotalResultCount());
                 m_totalLabel.Text = builder.ToString();
             }
 
@@ -120,12 +120,12 @@ namespace AntiDupl.NET
         {
             StringBuilder builder = new StringBuilder();
             builder.Append(m_selectedText);
-            int selectedResultCount; //= m_mainSplitContainer.resultsListView.GetSelectedResultCount();
+            int selectedResultCount; //= m_mainSplitContainer.ResultsListView.GetSelectedResultCount();
             if (m_options.resultsOptions.IsPairTableView())
-                selectedResultCount = m_mainSplitContainer.resultsListView.GetSelectedResultCount();
+                selectedResultCount = m_mainSplitContainer.ResultsListView.GetSelectedResultCount();
             else
-                selectedResultCount = m_mainSplitContainer.thumbnailGroupTable.GetSelectedImagesCount(); ;
-            if (m_mainSplitContainer.resultsListView.GetTotalResultCount() > 0)
+                selectedResultCount = m_mainSplitContainer.ThumbnailGroupTable.GetSelectedImagesCount(); ;
+            if (m_mainSplitContainer.ResultsListView.GetTotalResultCount() > 0)
                 builder.Append(selectedResultCount);
             else
                 builder.Append(0);
@@ -148,7 +148,7 @@ namespace AntiDupl.NET
         {
             StringBuilder builder = new StringBuilder();
             builder.Append(m_currentText);
-            builder.Append(m_mainSplitContainer.resultsListView.GetTotalResultCount() > 0 ? m_mainSplitContainer.resultsListView.GetCurrentRowIndex() + 1 : 0);
+            builder.Append(m_mainSplitContainer.ResultsListView.GetTotalResultCount() > 0 ? m_mainSplitContainer.ResultsListView.GetCurrentRowIndex() + 1 : 0);
             m_currentLabel.Text = builder.ToString();
         }
     }

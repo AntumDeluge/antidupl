@@ -65,6 +65,7 @@ namespace ad
 		bool RenameCurrent(adRenameCurrentType renameCurrentType, const TString & newFileName);
         bool Rename(adSize groupId, adSize index, const TString & newFileName);
 		bool Delete(adSize groupId, adSize index);
+		bool MoveSelectedImageTo(const TString & directory);
 		bool MoveCurrentGroup(const TString& directory);
 		bool RenameCurrentGroupAs(const TString & fileName);
 
@@ -82,6 +83,7 @@ namespace ad
         bool Rename(TImageInfo *pOldImageInfo, TImageInfo *pNewImageInfo);
 		bool RenameLike(TImageInfo *pOldImageInfo, TImageInfo *pNewImageInfo);
 		bool Move(TImageInfo *pOldImageInfo, TImageInfo *pNewImageInfo);
+		bool MoveTo(TImageInfo *pImageInfo, const TString & directory);
 		bool MoveAndRenameLike(TImageInfo *pOldImageInfo, TImageInfo *pNewImageInfo);
 
         TOptions *m_pOptions;

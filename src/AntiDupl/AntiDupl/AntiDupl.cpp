@@ -577,6 +577,13 @@ DLLAPI adError adImageInfoDeleteW(adHandle handle, adSize groupId, adSize index)
     return handle->Result()->Delete(groupId, index);
 }
 
+DLLAPI adError adMoveSelectedImageToW(adHandle handle, const adCharW* directory)
+{
+	CHECK_HANDLE CHECK_ACCESS LOCK CHECK_POINTER(directory) 
+
+	return handle->Result()->MoveSelectedImageTo(directory);
+}
+
 DLLAPI adError adLoadBitmapA(adHandle handle, const adCharA* fileName, adBitmapPtr pBitmap)
 {
     CHECK_HANDLE CHECK_POINTER(fileName) 

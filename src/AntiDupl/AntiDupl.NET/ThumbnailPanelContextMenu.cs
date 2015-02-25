@@ -135,11 +135,11 @@ namespace AntiDupl.NET
             dialog.Title = Resources.Strings.Current.ImagePreviewContextMenu_RenameImageItem_Text;
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                m_thumbnailGroupTable.Rename(m_thumbnailPanel.Group, m_thumbnailPanel.Index, dialog.FileName);
-                /*if (m_thumbnailGroupTable.Rename(m_thumbnailPanel.Group, m_thumbnailPanel.Index, dialog.FileName))
+                if (m_thumbnailGroupTable.Rename(m_thumbnailPanel.Group, m_thumbnailPanel.Index, dialog.FileName))
+                //if (m_thumbnailGroupTable.Rename(m_thumbnailPanel.Group, m_thumbnailPanel.Index, dialog.FileName))
                 {
-                    m_thumbnailPreview.SetThumbnail(m_thumbnailPreview.Group, m_thumbnailPreview.Index);
-                }*/
+                    m_thumbnailGroupTable.MainSplitContainer.ThumbnailPreview.SetThumbnail(m_thumbnailPanel.Group, m_thumbnailPanel.Index);
+                }
             }
         }
 

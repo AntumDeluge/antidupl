@@ -113,7 +113,7 @@ namespace AntiDupl.NET
         {
             Items.Clear();
 
-            if (m_mainSplitContainer.resultsListView.GetTotalResultCount() > 0)
+            if (m_mainSplitContainer.ResultsListView.GetTotalResultCount() > 0)
             {
                 if (m_core.CanApply(CoreDll.ActionEnableType.Defect))
                 {
@@ -130,7 +130,7 @@ namespace AntiDupl.NET
                     Items.Add(new ToolStripSeparator());
                     Items.Add(m_renameFirstLikeSecond);
                     Items.Add(m_renameSecondLikeFirst);
-                    if (m_mainSplitContainer.resultsListView.MoveEnable())
+                    if (m_mainSplitContainer.ResultsListView.MoveEnable())
                     {
                         Items.Add(m_moveFirstToSecond);
                         Items.Add(m_moveSecondToFirst);
@@ -153,13 +153,13 @@ namespace AntiDupl.NET
         {
             ToolStripItem item = (ToolStripItem)sender;
             CoreDll.LocalActionType action = (CoreDll.LocalActionType)item.Tag;
-            m_mainSplitContainer.resultsListView.MakeAction(action, CoreDll.TargetType.Selected);
+            m_mainSplitContainer.ResultsListView.MakeAction(action, CoreDll.TargetType.Selected);
         }
 
         private void UpdateResults()
         {
-            if (m_mainSplitContainer.resultsListView != null && 
-                m_mainSplitContainer.resultsListView.GetTotalResultCount() > 0)
+            if (m_mainSplitContainer.ResultsListView != null && 
+                m_mainSplitContainer.ResultsListView.GetTotalResultCount() > 0)
             {
                 Items.Add(new ToolStripSeparator());
             }

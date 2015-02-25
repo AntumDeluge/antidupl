@@ -319,6 +319,14 @@ namespace ad
         return m_pUndoRedoEngine->Rename(groupId, index, newFileName) ? AD_OK : AD_ERROR_UNKNOWN;
     }
 
+	adError TResultStorage::MoveSelectedImageTo(const TString & directory)
+	{
+        if(!IsDirectoryExists(directory.c_str()))
+            return AD_ERROR_DIRECTORY_IS_NOT_EXIST;
+
+        return m_pUndoRedoEngine->MoveSelectedImageTo(directory) ? AD_OK : AD_ERROR_UNKNOWN;
+    }
+
     adError TResultStorage::Load(const TChar* fileName, bool check)
     {
 		adError error = AD_OK;

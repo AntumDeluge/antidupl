@@ -464,6 +464,11 @@ namespace AntiDupl.NET
             //return m_dll.adResultApplyTo(m_handle, CoreDll.LocalActionType.DeleteSelected, CoreDll.TargetType.SelectedImages) == CoreDll.Error.Ok;
         }
 
+        public bool MoveSelectedTo(string directory)
+        {
+            return m_dll.adMoveSelectedImageToW(m_handle, directory) == CoreDll.Error.Ok;
+        }
+
         public System.Drawing.Bitmap LoadBitmap(int width, int height, string path)
         {
             if (height * width == 0)

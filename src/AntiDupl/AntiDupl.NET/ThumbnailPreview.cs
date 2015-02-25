@@ -27,6 +27,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
 using System.ComponentModel;
+using System.IO;
 
 namespace AntiDupl.NET
 {
@@ -264,7 +265,6 @@ namespace AntiDupl.NET
             m_toolStrip.Items.Add(m_mistakeButton);
         }*/
 
-        //TODO кнопка не появляется!
         private void InnitializeTestButton()
         {
             Button testButton = new Button();
@@ -303,6 +303,23 @@ namespace AntiDupl.NET
             else
                 m_imageExifLabel.Visible = false;
             m_pathLabel.Text = ImageInfo.path;
+        }
+
+        public void UpdateInfo(CoreImageInfo imageInfo)
+        {
+            /*m_fileSizeLabel.Text = imageInfo.GetFileSizeString();
+            m_imageSizeLabel.Text = imageInfo.GetImageSizeString();
+            m_imageBlocknessLabel.Text = imageInfo.GetBlockinessString();
+            m_imageBlurringLabel.Text = ImageInfo.GetBlurringString();
+            m_imageTypeLabel.Text = ImageInfo.type == CoreDll.ImageType.None ? "   " : ImageInfo.GetImageTypeString();
+            if (ImageInfo.exifInfo.isEmpty == CoreDll.FALSE)
+            {
+                m_imageExifLabel.Visible = true;
+                SetExifTooltip(ImageInfo);
+            }
+            else
+                m_imageExifLabel.Visible = false;*/
+            m_pathLabel.Text = imageInfo.path;
         }
 
         private void OnButtonClicked(object sender, System.EventArgs e)

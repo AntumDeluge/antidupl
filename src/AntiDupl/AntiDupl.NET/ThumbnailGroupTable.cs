@@ -39,7 +39,11 @@ namespace AntiDupl.NET
         private AntiDupl.NET.Options m_options;
         private CoreGroup[] m_groups;
         private int m_maxGroupIndex = -1;
+        public  MainSplitContainer MainSplitContainer { get { return m_mainSplitContainer; } }
         private MainSplitContainer m_mainSplitContainer;
+
+        private int m_currentGroupId = -1;
+        private int m_currentImageIndex = -1;
 
         private ThumbnailStorage m_thumbnailStorage = null;
         private volatile bool m_abortUpdateThumbnailsThread = false;
@@ -452,10 +456,15 @@ namespace AntiDupl.NET
             control.Invalidate();
         }
 
+        // Вызывается при изменение текущего выделенного эскиза.
         public void ChangeCurrentThumbnail(CoreGroup group, int index)
         {
             if (OnCurrentThumbnailChanged != null)
+            {
+                m_currentGroupId = group.id - 1;
+                m_currentImageIndex = index;
                 OnCurrentThumbnailChanged(group, index);
+            }
         }
 
         public void SelectedResultsChanged()
@@ -486,6 +495,7 @@ namespace AntiDupl.NET
             return false;
         }
 
+        //TODO
         public int GetSelectedImagesCount()
         {
             int selectedImagesCount = 0;
@@ -525,6 +535,25 @@ namespace AntiDupl.NET
             foreach (ThumbnailGroupPanel panel in m_thumbnailGroupPanels)
                 if (panel != null)
                     panel.UpdateGroup();
+        }
+
+        public string CurrentPath()
+        {
+            if (m_groups[m_currentGroupId].images[m_currentImageIndex] != null)
+                return System.IO.Path.GetDirectoryName(m_groups[m_currentGroupId].images[m_currentImageIndex].path);
+            else
+                return String.Empty;
+        }
+
+        public bool MoveSelectedTo(string directory)
+        {
+            if (m_core.MoveSelectedTo(directory))
+            {
+                UpdateGroups();
+                m_mainSplitContainer.ThumbnailPreview.UpdateInfo(m_groups[m_currentGroupId].images[m_currentImageIndex]);
+                return true;
+            }
+            return false;
         }
     }
 }

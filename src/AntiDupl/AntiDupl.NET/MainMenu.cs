@@ -249,13 +249,13 @@ namespace AntiDupl.NET
             if(m_options.resultsOptions.viewMode == ResultsOptions.ViewMode.VerticalPairTable)
             {
                 SelectVerticalColumnsForm form =
-                    new SelectVerticalColumnsForm(m_mainSplitContainer.resultsListView, m_options);
+                    new SelectVerticalColumnsForm(m_mainSplitContainer.ResultsListView, m_options);
                 form.ShowDialog();
             }
             if (m_options.resultsOptions.viewMode == ResultsOptions.ViewMode.HorizontalPairTable)
             {
                 SelectHorizontalColumnsForm form =
-                    new SelectHorizontalColumnsForm(m_mainSplitContainer.resultsListView, m_options);
+                    new SelectHorizontalColumnsForm(m_mainSplitContainer.ResultsListView, m_options);
                 form.ShowDialog();
             }
         }
@@ -298,8 +298,8 @@ namespace AntiDupl.NET
 
         public void SelectAllAction(object sender, EventArgs e)
         {
-            m_mainSplitContainer.resultsListView.SetRowSelection(true);
-            m_mainSplitContainer.resultsListView.Invalidate();
+            m_mainSplitContainer.ResultsListView.SetRowSelection(true);
+            m_mainSplitContainer.ResultsListView.Invalidate();
         }
         
         public void ProfileSaveAsAction(object sender, EventArgs e)

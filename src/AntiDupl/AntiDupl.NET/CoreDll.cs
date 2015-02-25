@@ -668,6 +668,11 @@ namespace AntiDupl.NET
         public adImageInfoDeleteW_fn adImageInfoDeleteW = null;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
+        public delegate Error adMoveSelectedImageToW_fn(IntPtr handle, string directory);
+        [DynamicModuleApi]
+        public adMoveSelectedImageToW_fn adMoveSelectedImageToW = null;
+      
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
         public delegate Error adLoadBitmapW_fn(IntPtr handle, string fileName, IntPtr pBitmap);
         [DynamicModuleApi]
         public adLoadBitmapW_fn adLoadBitmapW = null;

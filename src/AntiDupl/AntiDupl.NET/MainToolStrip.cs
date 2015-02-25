@@ -59,8 +59,10 @@ namespace AntiDupl.NET
         private ToolStripButton m_deleteFirstButton;
         private ToolStripButton m_deleteSecondButton;
         private ToolStripButton m_deleteBothButton;
-        private ToolStripButton m_deleteSelectedButton;
         private ToolStripButton m_deleteDefectButton;
+
+        private ToolStripButton m_deleteSelectedButton;
+        private ToolStripButton m_moveSelectedButton;
 
         private ToolStripButton m_helpButton;
 
@@ -126,6 +128,7 @@ namespace AntiDupl.NET
             m_deleteSecondButton = InitFactory.ToolButton.Create("DeleteSecondsVerticalButton", CoreDll.LocalActionType.DeleteSecond, MakeAction);
             m_deleteBothButton = InitFactory.ToolButton.Create("DeleteBothesVerticalButton", CoreDll.LocalActionType.DeleteBoth, MakeAction);
             m_deleteSelectedButton = InitFactory.ToolButton.Create("DeleteSelectedVerticalButton", CoreDll.LocalActionType.DeleteSelected, MakeAction);
+            m_moveSelectedButton = InitFactory.ToolButton.Create("MoveSelectedVerticalButton", null, MoveTo);
 
             m_deleteDefectButton = InitFactory.ToolButton.Create("DeleteDefectsVerticalButton", CoreDll.LocalActionType.DeleteDefect, MakeAction);
 
@@ -163,6 +166,7 @@ namespace AntiDupl.NET
             m_deleteBothButton.ToolTipText = s.ResultsListViewContextMenu_DeleteBothItem_Text;
             m_deleteDefectButton.ToolTipText = s.ResultsListViewContextMenu_DeleteDefectItem_Text;
             m_deleteSelectedButton.ToolTipText = "Удалить выделенные";
+            m_moveSelectedButton.ToolTipText = "Переместить выделенные";
 
             m_helpButton.ToolTipText = s.MainMenu_Help_HelpMenuItem_Text;
         }
@@ -183,9 +187,20 @@ namespace AntiDupl.NET
             ToolStripItem item = (ToolStripItem)sender;
             CoreDll.LocalActionType action = (CoreDll.LocalActionType)item.Tag;
             if (m_options.resultsOptions.viewMode == ResultsOptions.ViewMode.GroupedThumbnails)
-                m_mainSplitContainer.resultsListView.MakeAction(action, CoreDll.TargetType.SelectedImages);
+                m_mainSplitContainer.ResultsListView.MakeAction(action, CoreDll.TargetType.SelectedImages);
             else
-                m_mainSplitContainer.resultsListView.MakeAction(action, CoreDll.TargetType.Selected);
+                m_mainSplitContainer.ResultsListView.MakeAction(action, CoreDll.TargetType.Selected);
+        }
+
+        private void MoveTo(object sender, EventArgs e)
+        {
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+            //dialog.ShowNewFolderButton = false;
+            dialog.SelectedPath = m_mainSplitContainer.ThumbnailGroupTable.CurrentPath();
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                m_mainSplitContainer.ThumbnailGroupTable.MoveSelectedTo(dialog.SelectedPath);
+            }
         }
         
         private void OnSelectedResultsChanged()
@@ -204,6 +219,7 @@ namespace AntiDupl.NET
             m_deleteBothButton.Enabled = duplPair;
             m_deleteDefectButton.Enabled = defect;
             m_deleteSelectedButton.Enabled = duplPairGroup;
+            m_moveSelectedButton.Enabled = duplPairGroup;
 
             m_undoButton.Enabled = m_core.CanApply(CoreDll.ActionEnableType.Undo);
             m_redoButton.Enabled = m_core.CanApply(CoreDll.ActionEnableType.Redo);
@@ -274,7 +290,10 @@ namespace AntiDupl.NET
                 Items.Add(m_deleteDefectButton);
             }
             if (viewMode == ResultsOptions.ViewMode.GroupedThumbnails)
+            {
                 Items.Add(m_deleteSelectedButton);
+                Items.Add(m_moveSelectedButton);
+            }
             Items.Add(new ToolStripSeparator());
             Items.Add(m_helpButton);
 
