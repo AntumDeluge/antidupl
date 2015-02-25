@@ -550,10 +550,17 @@ namespace AntiDupl.NET
             if (m_core.MoveSelectedTo(directory))
             {
                 UpdateGroups();
-                m_mainSplitContainer.ThumbnailPreview.UpdateInfo(m_groups[m_currentGroupId].images[m_currentImageIndex]);
+                //m_mainSplitContainer.ThumbnailPreview.UpdateInfo(m_groups[m_currentGroupId].images[m_currentImageIndex]);
+                m_mainSplitContainer.ThumbnailPreview.SetThumbnail(m_groups[m_currentGroupId], m_currentImageIndex);
                 return true;
             }
             return false;
+        }
+
+        public void UpdateCurrentImagePreview()
+        {
+            //m_mainSplitContainer.ThumbnailPreview.UpdateInfo(m_groups[m_currentGroupId], m_currentImageIndex);
+            m_mainSplitContainer.ThumbnailPreview.SetThumbnail(m_groups[m_currentGroupId], m_currentImageIndex);
         }
     }
 }

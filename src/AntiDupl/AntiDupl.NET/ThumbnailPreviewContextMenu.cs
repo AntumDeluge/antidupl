@@ -158,7 +158,8 @@ namespace AntiDupl.NET
             {
                 if (m_thumbnailGroupTable.Rename(m_thumbnailPreview.Group, m_thumbnailPreview.Index, dialog.FileName))
                 {
-                    m_thumbnailPreview.SetThumbnail(m_thumbnailPreview.Group, m_thumbnailPreview.Index);
+                    //m_thumbnailPreview.SetThumbnail(m_thumbnailPreview.Group, m_thumbnailPreview.Index);
+                    m_thumbnailGroupTable.UpdateCurrentImagePreview();
                 }
             }
         }
@@ -198,13 +199,13 @@ namespace AntiDupl.NET
             //}
         }
 
-        private void SelectAllButThis(object sender, EventArgs e)
+        /*private void SelectAllButThis(object sender, EventArgs e)
         {
             m_core.SetSelection(m_thumbnailPreview.Group.id, m_thumbnailPreview.Index, CoreDll.SelectionType.SelectAllButThis);
             //m_thumbnailGroupPanel.Table.ChangeCurrentThumbnail(m_group, m_index);
             //m_thumbnailGroupTable.SelectedResultsChanged();
             m_thumbnailGroupTable.UpdateGroup(m_thumbnailPreview.Group.id);
-        }
+        }*/
 
         private void MakeSelect(object sender, EventArgs e)
         {

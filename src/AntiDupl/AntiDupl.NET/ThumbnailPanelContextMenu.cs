@@ -138,7 +138,8 @@ namespace AntiDupl.NET
                 if (m_thumbnailGroupTable.Rename(m_thumbnailPanel.Group, m_thumbnailPanel.Index, dialog.FileName))
                 //if (m_thumbnailGroupTable.Rename(m_thumbnailPanel.Group, m_thumbnailPanel.Index, dialog.FileName))
                 {
-                    m_thumbnailGroupTable.MainSplitContainer.ThumbnailPreview.SetThumbnail(m_thumbnailPanel.Group, m_thumbnailPanel.Index);
+                    //m_thumbnailGroupTable.MainSplitContainer.ThumbnailPreview.SetThumbnail(m_thumbnailPanel.Group, m_thumbnailPanel.Index);
+                    m_thumbnailGroupTable.UpdateCurrentImagePreview();
                 }
             }
         }

@@ -305,7 +305,7 @@ namespace AntiDupl.NET
             m_pathLabel.Text = ImageInfo.path;
         }
 
-        public void UpdateInfo(CoreImageInfo imageInfo)
+        /*public void UpdateInfo(CoreGroup group, int index)
         {
             /*m_fileSizeLabel.Text = imageInfo.GetFileSizeString();
             m_imageSizeLabel.Text = imageInfo.GetImageSizeString();
@@ -318,9 +318,9 @@ namespace AntiDupl.NET
                 SetExifTooltip(ImageInfo);
             }
             else
-                m_imageExifLabel.Visible = false;*/
+                m_imageExifLabel.Visible = false;
             m_pathLabel.Text = imageInfo.path;
-        }
+        }*/
 
         private void OnButtonClicked(object sender, System.EventArgs e)
         {
