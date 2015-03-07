@@ -113,6 +113,10 @@ namespace AntiDupl.NET
             m_index = index;
             m_thumbnailGroupPanel = thumbnailGroupPanel;
             InitializeComponents();
+
+            this.SetStyle(ControlStyles.Selectable, true);
+            this.TabStop = true;
+
             SetImageInfo();
         }
 
@@ -302,10 +306,87 @@ namespace AntiDupl.NET
         /// <summary>
         /// Обновляем превью.
         /// </summary>
+        //bool clicked;
         private void OnClick(object sender, EventArgs e)
         {
+            //clicked = true;
+            //Invalidate();
             m_thumbnailGroupPanel.Table.ChangeCurrentThumbnail(m_group, m_index);
+            //this.Selected = true;
+            //this.Focus = true;
+            //this.ForeColor = Color.Red;
+            //if (this.Focused)
+            //this.BackColor = Color.Olive;
+            //
+            this.Focus();
         }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            this.Focus();
+            base.OnMouseDown(e);
+        }
+        protected override bool IsInputKey(Keys keyData)
+        {
+            /*if (keyData == Keys.Up || keyData == Keys.Down) return true;
+            if (keyData == Keys.Left || keyData == Keys.Right) return true;*/
+            m_thumbnailGroupPanel.Table.OnChangeKey(keyData, m_group.id, m_index);
+            /*switch (keyData)
+            {
+                case Keys.Left:
+                    m_thumbnailGroupPanel.Table.ChangeCurrentThumbnail(m_group, --m_index);
+                    break;
+                case Keys.Right:
+                    m_thumbnailGroupPanel.Table.ChangeCurrentThumbnail(m_group, ++m_index);
+                    break;
+            }*/
+            return base.IsInputKey(keyData);
+        }
+        protected override void OnEnter(EventArgs e)
+        {
+            if (this.Focused)
+                m_thumbnailGroupPanel.Table.ChangeCurrentThumbnail(m_group, m_index);
+            this.Invalidate();
+            base.OnEnter(e);
+        }
+        protected override void OnLeave(EventArgs e)
+        {
+            //this.BackColor = Color.Transparent;
+            this.Invalidate();
+            base.OnLeave(e);
+        }
+        protected override void OnPaint(PaintEventArgs pe)
+        {
+            base.OnPaint(pe);
+            if (this.Focused)
+            {
+                var rc = this.ClientRectangle;
+                //rc.Inflate(+2, +2);
+                //rc.Inflate(-2, -2);
+                ControlPaint.DrawFocusRectangle(pe.Graphics, rc);
+                //this.BackColor = Color.Red;
+            }
+        }
+
+        /*protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            //if (this.Selected)
+            //    this.BackColor = Color.Red;
+            /*
+            if (clicked)
+            {
+                //var g = e.Graphics;
+                //var b = new SolidBrush(Color.FromArgb(50, 50, 50, 50));
+                //g.FillRectangle(b, mouse.X, mouse.Y, 50, 50);
+                this.BackColor = Color.Red;
+
+                clicked = false;
+            }
+            else
+                this.BackColor = Color.Transparent;
+        }*/
 
         private List<string> GetExifList(CoreImageInfo currentImageInfo, Strings s)
         {

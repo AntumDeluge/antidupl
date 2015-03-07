@@ -42,7 +42,7 @@ namespace AntiDupl.NET
         public  MainSplitContainer MainSplitContainer { get { return m_mainSplitContainer; } }
         private MainSplitContainer m_mainSplitContainer;
 
-        private int m_currentGroupId = -1;
+        private int m_currentGroupId = -1; //запоминает последнию переданную группу
         private int m_currentImageIndex = -1;
 
         private ThumbnailStorage m_thumbnailStorage = null;
@@ -156,7 +156,9 @@ namespace AntiDupl.NET
                 height += (maxPanel.Height + maxPanel.Margin.Vertical) * m_groups.Length;
                 width += maxPanel.Width + maxPanel.Margin.Horizontal;
             }
+
             AutoScrollMinSize = new Size(width, height);
+            AdjustFormScrollbars(true);
             ResumeDrawing(this);
         }
 
@@ -209,7 +211,7 @@ namespace AntiDupl.NET
                 m_thumbnailGroupPanels[index] = groupPanel;
                 Controls.Add(groupPanel);
                 m_changeControls = true;
-                Console.WriteLine("Add m_thumbnailGroupPanels[{0}]", index);
+                //Console.WriteLine("Add m_thumbnailGroupPanels[{0}]", index);
             }
             //else if (m_thumbnailGroupPanels[index].Location.IsEmpty)
             // Если хранилище еще не содержит эскиза
@@ -562,5 +564,71 @@ namespace AntiDupl.NET
             //m_mainSplitContainer.ThumbnailPreview.UpdateInfo(m_groups[m_currentGroupId], m_currentImageIndex);
             m_mainSplitContainer.ThumbnailPreview.SetThumbnail(m_groups[m_currentGroupId], m_currentImageIndex);
         }
+
+        /*protected override bool IsInputKey(Keys keyData)
+        {
+            if (keyData == Keys.Up || keyData == Keys.Down) return true;
+            if (keyData == Keys.Left || keyData == Keys.Right) return true;
+            switch (keyData)
+            {
+                case Keys.Left:
+                    m_currentImageIndex--;
+                    UpdateCurrentImagePreview();
+                    break;
+            }
+            return base.IsInputKey(keyData);
+            OnChangeKey(keyData, m_currentGroupId, m_currentImageIndex);
+            return base.IsInputKey(keyData);
+        }*/
+
+        public bool OnChangeKey(Keys keyData, int groupId, int index)
+        {
+            m_currentGroupId = groupId;
+            m_currentImageIndex = index;
+            //if (keyData == Keys.Up || keyData == Keys.Down) return true;
+            //if (keyData == Keys.Left || keyData == Keys.Right) return true;
+            switch (keyData)
+            {
+                case Keys.Left:
+                    if (m_currentImageIndex > 0)
+                    {
+                        m_currentImageIndex--;
+                        UpdateCurrentImagePreview();
+                    }
+                    break;
+                case Keys.Right:
+                    if (m_currentImageIndex < m_groups[m_currentGroupId].images.Length - 1)
+                    {
+                        m_currentImageIndex++;
+                        UpdateCurrentImagePreview();
+                    }
+                    break;
+                /*case Keys.Up:
+                    if (m_groups[m_currentGroupId - 1] != null)
+                    {
+                        m_currentGroupId--;
+                        if (m_currentImageIndex > m_groups[m_currentGroupId].images.Length)
+                            m_currentImageIndex = 0;
+                        UpdateCurrentImagePreview();
+                    }
+                    break;
+                case Keys.Down:
+                    if (m_groups[m_currentGroupId + 1] != null)
+                    {
+                        m_currentGroupId++;
+                        if (m_currentImageIndex > m_groups[m_currentGroupId].images.Length)
+                            m_currentImageIndex = 0;
+                        UpdateCurrentImagePreview();
+                    }
+                    break;*/
+            }
+            return base.IsInputKey(keyData);
+        }
+
+        /*private void OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == (Keys.C | Keys.Control))
+            { }
+        }*/
     }
 }
